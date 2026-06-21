@@ -1,0 +1,1029 @@
+<!doctype html>
+<html lang="pl">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>ZAGADKA 5 — TOR PAMIĘCI — Escape Room klasa 5</title>
+		<link
+			href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Inter:wght@300;400;600;700&display=swap"
+			rel="stylesheet"
+		/>
+		<style>
+			*,
+			*::before,
+			*::after {
+				box-sizing: border-box;
+				margin: 0;
+				padding: 0;
+			}
+
+			:root {
+				--bg: #070b14;
+				--bg2: #0d1628;
+				--cyan: #00d4ff;
+				--violet: #7b2fff;
+				--red: #ff3366;
+				--gold: #ffd166;
+				--green: #4ade80;
+				--text: #c8d8ee;
+				--text-dim: #5a7090;
+				--mono: "Share Tech Mono", monospace;
+				--sans: "Inter", sans-serif;
+			}
+
+			html {
+				scroll-behavior: smooth;
+			}
+
+			body {
+				background: var(--bg);
+				color: var(--text);
+				font-family: var(--sans);
+				overflow-x: hidden;
+				min-height: 100vh;
+			}
+
+			#matrix-canvas {
+				position: fixed;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+				z-index: 0;
+				opacity: 0.18;
+				pointer-events: none;
+			}
+
+			.layer {
+				position: relative;
+				z-index: 1;
+			}
+
+			.hero {
+				min-height: 70vh;
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				justify-content: center;
+				text-align: center;
+				padding: 4rem 1.5rem 2rem;
+				gap: 1.5rem;
+			}
+
+			.badge {
+				font-family: var(--mono);
+				font-size: 0.7rem;
+				letter-spacing: 0.3em;
+				color: var(--cyan);
+				border: 1px solid var(--cyan);
+				padding: 0.35em 1em;
+				border-radius: 2px;
+				text-transform: uppercase;
+				animation: pulse-border 2.5s ease-in-out infinite;
+			}
+
+			@keyframes pulse-border {
+				0%,
+				100% {
+					box-shadow: 0 0 6px var(--cyan);
+				}
+				50% {
+					box-shadow:
+						0 0 20px var(--cyan),
+						0 0 40px rgba(0, 212, 255, 0.2);
+				}
+			}
+
+			.hero-title {
+				font-family: var(--mono);
+				font-size: clamp(1.8rem, 6vw, 4rem);
+				line-height: 1.1;
+				letter-spacing: -0.01em;
+				color: #fff;
+			}
+
+			.hero-title .accent {
+				color: var(--cyan);
+				text-shadow: 0 0 30px var(--cyan);
+			}
+			.hero-title .accent-v {
+				color: var(--violet);
+				text-shadow: 0 0 30px var(--violet);
+			}
+
+			.hero-sub {
+				font-family: var(--mono);
+				font-size: clamp(0.7rem, 2vw, 0.95rem);
+				color: var(--text-dim);
+				letter-spacing: 0.15em;
+				max-width: 520px;
+			}
+
+			section {
+				padding: clamp(2rem, 6vw, 4rem) clamp(1.5rem, 5vw, 4rem);
+				max-width: 900px;
+				margin: 0 auto;
+			}
+
+			.section-label {
+				font-family: var(--mono);
+				font-size: 0.65rem;
+				letter-spacing: 0.4em;
+				color: var(--cyan);
+				text-transform: uppercase;
+				margin-bottom: 1.2rem;
+			}
+
+			.section-title {
+				font-family: var(--mono);
+				font-size: clamp(1.4rem, 4vw, 2.2rem);
+				color: #fff;
+				margin-bottom: 1.5rem;
+				line-height: 1.2;
+			}
+
+			.section-title span {
+				color: var(--violet);
+			}
+
+			.prose {
+				font-size: clamp(0.9rem, 2vw, 1.05rem);
+				line-height: 1.8;
+				color: var(--text);
+				font-weight: 300;
+				max-width: 680px;
+			}
+
+			.divider {
+				height: 1px;
+				background: linear-gradient(
+					90deg,
+					transparent,
+					var(--cyan),
+					transparent
+				);
+				opacity: 0.25;
+				max-width: 900px;
+				margin: 0 auto;
+			}
+
+			.puzzle-wrapper {
+				background: rgba(10, 14, 26, 0.95);
+				border: 1px solid rgba(123, 47, 255, 0.4);
+				border-radius: 8px;
+				padding: clamp(1.5rem, 4vw, 2.5rem);
+				margin-top: 2rem;
+				box-shadow:
+					0 0 60px rgba(123, 47, 255, 0.1),
+					inset 0 0 40px rgba(0, 0, 0, 0.4);
+				position: relative;
+				overflow: hidden;
+			}
+
+			.puzzle-wrapper::before {
+				content: "";
+				position: absolute;
+				top: 0;
+				left: 0;
+				right: 0;
+				height: 3px;
+				background: linear-gradient(
+					90deg,
+					var(--violet),
+					var(--cyan),
+					var(--violet)
+				);
+				animation: scan 3s linear infinite;
+			}
+
+			@keyframes scan {
+				0% {
+					background-position: -200% center;
+				}
+				100% {
+					background-position: 200% center;
+				}
+			}
+
+			.terminal-header {
+				display: flex;
+				align-items: center;
+				gap: 0.6rem;
+				margin-bottom: 1.5rem;
+				padding-bottom: 1rem;
+				border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+			}
+
+			.t-dot {
+				width: 10px;
+				height: 10px;
+				border-radius: 50%;
+			}
+			.t-dot.r {
+				background: var(--red);
+			}
+			.t-dot.y {
+				background: var(--gold);
+			}
+			.t-dot.g {
+				background: #4ade80;
+			}
+
+			.terminal-title {
+				font-family: var(--mono);
+				font-size: 0.7rem;
+				color: var(--text-dim);
+				margin-left: 0.5rem;
+				letter-spacing: 0.1em;
+			}
+
+			.puzzle-intro {
+				font-family: var(--mono);
+				font-size: 0.8rem;
+				color: #4ade80;
+				margin-bottom: 1.2rem;
+				line-height: 1.6;
+			}
+			.puzzle-intro .prompt::before {
+				content: "> ";
+				color: var(--cyan);
+			}
+
+			.hint-toggle {
+				display: inline-flex;
+				align-items: center;
+				gap: 0.5rem;
+				background: none;
+				border: 1px solid rgba(0, 212, 255, 0.3);
+				color: var(--text-dim);
+				font-family: var(--mono);
+				font-size: 0.75rem;
+				letter-spacing: 0.1em;
+				padding: 0.5em 1.2em;
+				border-radius: 3px;
+				cursor: pointer;
+				transition: all 0.2s;
+				margin-bottom: 1.2rem;
+			}
+
+			.hint-toggle:hover {
+				border-color: var(--cyan);
+				color: var(--cyan);
+			}
+
+			.hint-box {
+				background: rgba(0, 212, 255, 0.05);
+				border: 1px solid rgba(0, 212, 255, 0.2);
+				border-radius: 4px;
+				padding: 1rem 1.2rem;
+				font-family: var(--mono);
+				font-size: 0.78rem;
+				color: var(--text-dim);
+				line-height: 1.8;
+				margin-bottom: 1.2rem;
+				display: none;
+			}
+
+			.hint-box.visible {
+				display: block;
+			}
+
+			.hint-box ul {
+				list-style: none;
+				margin-top: 0.5em;
+			}
+			.hint-box li {
+				margin-bottom: 0.4em;
+			}
+			.hint-box li::before {
+				content: "▸ ";
+				color: var(--cyan);
+			}
+
+			/* === Game stats bar === */
+			.stats-bar {
+				display: flex;
+				justify-content: center;
+				gap: 2rem;
+				flex-wrap: wrap;
+				font-family: var(--mono);
+				font-size: 0.78rem;
+				color: var(--text-dim);
+				margin-bottom: 1.4rem;
+			}
+			.stats-bar .stat-val {
+				color: var(--cyan);
+				font-weight: 700;
+			}
+
+			/* === Memory game grid === */
+			.memory-grid {
+				display: grid;
+				grid-template-columns: repeat(4, 1fr);
+				gap: 0.7rem;
+				max-width: 460px;
+				margin: 0 auto 1.6rem;
+			}
+
+			@media (max-width: 480px) {
+				.memory-grid {
+					grid-template-columns: repeat(3, 1fr);
+					gap: 0.5rem;
+				}
+			}
+
+			.mem-card {
+				position: relative;
+				aspect-ratio: 1;
+				perspective: 700px;
+				cursor: pointer;
+			}
+
+			.mem-card-inner {
+				position: relative;
+				width: 100%;
+				height: 100%;
+				transition: transform 0.45s ease;
+				transform-style: preserve-3d;
+			}
+
+			.mem-card.flipped .mem-card-inner,
+			.mem-card.matched .mem-card-inner {
+				transform: rotateY(180deg);
+			}
+
+			.mem-face {
+				position: absolute;
+				inset: 0;
+				backface-visibility: hidden;
+				border-radius: 8px;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				text-align: center;
+				font-family: var(--mono);
+				padding: 0.3rem;
+			}
+
+			.mem-front {
+				background: linear-gradient(
+					135deg,
+					rgba(0, 212, 255, 0.08),
+					rgba(123, 47, 255, 0.1)
+				);
+				border: 1px solid rgba(0, 212, 255, 0.3);
+				font-size: clamp(1.1rem, 4vw, 1.5rem);
+				color: var(--cyan);
+				transition: border-color 0.2s;
+			}
+			.mem-card:hover .mem-front {
+				border-color: var(--cyan);
+			}
+
+			.mem-back {
+				background: rgba(13, 22, 40, 0.95);
+				border: 1px solid rgba(255, 255, 255, 0.15);
+				transform: rotateY(180deg);
+				font-size: clamp(0.78rem, 2.6vw, 0.95rem);
+				color: #fff;
+				font-weight: 700;
+				line-height: 1.25;
+			}
+
+			.mem-card.matched .mem-back {
+				border-color: var(--green);
+				color: var(--green);
+				box-shadow: 0 0 14px rgba(74, 222, 128, 0.3);
+			}
+
+			.mem-card.shake .mem-card-inner {
+				animation: shake 0.4s ease;
+			}
+
+			@keyframes shake {
+				0%,
+				100% {
+					transform: rotateY(180deg) translateX(0);
+				}
+				25% {
+					transform: rotateY(180deg) translateX(-4px);
+				}
+				75% {
+					transform: rotateY(180deg) translateX(4px);
+				}
+			}
+
+			.feedback {
+				margin-top: 1rem;
+				font-family: var(--mono);
+				font-size: 0.82rem;
+				padding: 0.75em 1.1em;
+				border-radius: 4px;
+				display: none;
+				animation: fade-in 0.3s ease;
+			}
+
+			@keyframes fade-in {
+				from {
+					opacity: 0;
+					transform: translateY(4px);
+				}
+				to {
+					opacity: 1;
+					transform: translateY(0);
+				}
+			}
+
+			.feedback.ok {
+				display: block;
+				background: rgba(74, 222, 128, 0.1);
+				border: 1px solid rgba(74, 222, 128, 0.35);
+				color: #4ade80;
+			}
+
+			.password-reveal {
+				margin-top: 1.5rem;
+				padding: 1.5rem;
+				background: rgba(0, 212, 255, 0.06);
+				border: 1px solid rgba(0, 212, 255, 0.3);
+				border-radius: 6px;
+				text-align: center;
+				display: none;
+				animation: fade-in 0.5s ease;
+			}
+
+			.password-reveal.show {
+				display: block;
+			}
+
+			.pw-label {
+				font-family: var(--mono);
+				font-size: 0.65rem;
+				letter-spacing: 0.4em;
+				color: var(--text-dim);
+				text-transform: uppercase;
+				margin-bottom: 0.75rem;
+			}
+			.pw-code {
+				font-family: var(--mono);
+				font-size: clamp(1.5rem, 5vw, 2.5rem);
+				color: var(--cyan);
+				letter-spacing: 0.3em;
+				text-shadow: 0 0 30px var(--cyan);
+				font-weight: 700;
+			}
+			.pw-next {
+				margin-top: 1rem;
+				font-family: var(--mono);
+				font-size: 0.78rem;
+				color: var(--text-dim);
+				line-height: 1.7;
+				text-align: left;
+				max-width: 480px;
+				margin-left: auto;
+				margin-right: auto;
+			}
+			.pw-next .arrow {
+				color: var(--gold);
+			}
+			.pw-next .place {
+				color: var(--cyan);
+				font-weight: 700;
+			}
+
+			/* === Zebrane fragmenty (progress tracker) === */
+			.fragments-section {
+				text-align: center;
+			}
+
+			.fragments-desc {
+				margin: 0 auto;
+				text-align: center;
+			}
+
+			.fragments-row {
+				display: flex;
+				justify-content: center;
+				align-items: center;
+				gap: 0.6rem;
+				flex-wrap: wrap;
+				margin-top: 2.2rem;
+			}
+
+			.fragment-plus {
+				font-family: var(--mono);
+				color: var(--text-dim);
+				font-size: 1rem;
+			}
+
+			.fragment-pill {
+				font-family: var(--mono);
+				font-size: 0.8rem;
+				letter-spacing: 0.06em;
+				padding: 0.65em 1.3em;
+				border-radius: 6px;
+				border: 1px solid rgba(255, 255, 255, 0.1);
+				background: rgba(13, 22, 40, 0.7);
+				color: var(--text-dim);
+				transition: all 0.5s ease;
+			}
+
+			.fragment-pill.locked {
+				opacity: 0.6;
+			}
+
+			.fragment-pill.collected {
+				color: var(--cyan);
+				border-color: var(--cyan);
+				background: rgba(0, 212, 255, 0.06);
+				box-shadow: 0 0 16px rgba(0, 212, 255, 0.25);
+			}
+
+			.fragment-pill.just-unlocked {
+				animation: unlock-pop 0.6s ease;
+			}
+
+			@keyframes unlock-pop {
+				0% {
+					transform: scale(0.85);
+					box-shadow: 0 0 0 rgba(0, 212, 255, 0);
+				}
+				55% {
+					transform: scale(1.12);
+					box-shadow: 0 0 28px rgba(0, 212, 255, 0.55);
+				}
+				100% {
+					transform: scale(1);
+					box-shadow: 0 0 16px rgba(0, 212, 255, 0.25);
+				}
+			}
+
+			footer {
+				text-align: center;
+				padding: 2.5rem 1.5rem;
+				font-family: var(--mono);
+				font-size: 0.65rem;
+				color: var(--text-dim);
+				letter-spacing: 0.15em;
+				border-top: 1px solid rgba(255, 255, 255, 0.04);
+			}
+			footer span {
+				color: var(--cyan);
+			}
+		</style>
+	</head>
+	<body>
+		<canvas id="matrix-canvas"></canvas>
+
+		<div class="layer">
+			<section class="hero">
+				<div class="badge">Escape Room — Moduł 5 — Klasa 5</div>
+
+				<h1 class="hero-title">
+					TOR<br />
+					<span class="accent">PAMIĘCI</span>
+					<span class="accent-v">ROBO-5</span>
+				</h1>
+
+				<p class="hero-sub">
+					ZNALEZIONO KOD QR #4 :: WYKRYTO MODU&#321; GIER LOGICZNYCH
+					:: KOLEJNY ETAP REKONSTRUKCJI
+				</p>
+			</section>
+
+			<section>
+				<div class="section-label">
+					// log.zdarzenia &mdash; modu&#322; 5
+				</div>
+				<p class="prose">
+					Jeste&#347;cie na placu zabaw i znale&#378;li&#347;cie
+					czwarty kod QR! Tym razem zamiast rachunk&oacute;w czeka na
+					was gra pami&#281;ciowa. Na planszy ukryto 6 par
+					r&oacute;wnowa&#380;nych warto&#347;ci z ca&#322;ego roku
+					nauki: u&#322;amk&oacute;w, liczb dziesi&#281;tnych, liczb
+					rzymskich, mno&#380;enia i jednostek miary. Znajd&#378;cie
+					wszystkie pary, by ods&#322;oni&#263; kolejny fragment kodu!
+				</p>
+			</section>
+
+			<div class="divider"></div>
+
+			<section id="zagadka">
+				<div class="section-label">
+					// terminal.zagadka &mdash; poziom 4 / gra pami&#281;ciowa
+				</div>
+				<h2 class="section-title">Znajd&#378; <span>pary</span></h2>
+				<p class="prose" style="margin-bottom: 0.5rem">
+					Kliknijcie dwie karty, by je odkry&#263;. Je&#347;li
+					pasuj&#261; do siebie (np. u&#322;amek i jego posta&#263;
+					dziesi&#281;tna) &mdash; zostan&#261; odkryte na sta&#322;e.
+					Znajd&#378;cie wszystkie 6 par.
+				</p>
+
+				<div class="puzzle-wrapper">
+					<div class="terminal-header">
+						<div class="t-dot r"></div>
+						<div class="t-dot y"></div>
+						<div class="t-dot g"></div>
+						<span class="terminal-title"
+							>ROBO-5 :: modu&#322; 5 :: zagadka_4.exe :: gra
+							pami&#281;ciowa</span
+						>
+					</div>
+
+					<div class="puzzle-intro">
+						<p class="prompt">
+							Na planszy jest 12 kart &mdash; 6 ukrytych par.
+						</p>
+						<p class="prompt">
+							Ka&#380;da para to dwa zapisy tej samej
+							warto&#347;ci.
+						</p>
+						<p class="prompt">
+							Znajd&#378;cie wszystkie, a robot odda wam ostatni
+							fragment kodu.
+						</p>
+					</div>
+
+					<button class="hint-toggle" onclick="toggleHint()">
+						<span id="hint-arrow">&#9654;</span> POKA&#379; ZASADY
+						GRY
+					</button>
+
+					<div class="hint-box" id="hint-box">
+						<div style="color: var(--cyan); margin-bottom: 0.6em">
+							// JAK GRA&#262;:
+						</div>
+						<div
+							style="
+								color: var(--text-dim);
+								line-height: 1.75;
+								margin-bottom: 0.9em;
+							"
+						>
+							Klikaj kolejno po dwie karty. Je&#347;li odkryjecie
+							dwie pasuj&#261;ce do siebie warto&#347;ci &mdash;
+							zostan&#261; odkryte na sta&#322;e (na zielono).
+							Je&#347;li nie pasuj&#261; &mdash; schowaj&#261;
+							si&#281; z powrotem i spr&oacute;bujecie ponownie,
+							zapami&#281;tuj&#261;c ich miejsce.
+						</div>
+						<div style="color: var(--cyan); margin-bottom: 0.5em">
+							// CZEGO SZUKA&#262;:
+						</div>
+						<ul style="color: var(--text-dim); line-height: 1.75">
+							<li>
+								U&#322;amek zwyk&#322;y i jego posta&#263;
+								dziesi&#281;tna (np. 1/2 i 0,5)
+							</li>
+							<li>
+								Liczba rzymska i jej zapis arabski (np. VII i 7)
+							</li>
+							<li>
+								Dzia&#322;anie mno&#380;enia i jego wynik (np. 9
+								&times; 6 i 54)
+							</li>
+							<li>
+								Jednostki miary o tej samej d&#322;ugo&#347;ci
+								(np. 1 m i 100 cm)
+							</li>
+						</ul>
+					</div>
+
+					<div class="stats-bar">
+						<span
+							>Znalezione pary:
+							<span class="stat-val" id="stat-matched">0</span> /
+							6</span
+						>
+						<span
+							>Liczba pr&oacute;b:
+							<span class="stat-val" id="stat-attempts"
+								>0</span
+							></span
+						>
+					</div>
+
+					<div class="memory-grid" id="memory-grid"></div>
+
+					<div class="feedback" id="feedback"></div>
+
+					<div class="password-reveal" id="pw-reveal">
+						<div class="pw-label">
+							// fragment kodu :: poziom 4 ::
+						</div>
+						<div class="pw-code">OMEGA&ndash;1</div>
+						<div class="pw-next">
+							<span class="arrow">&#9654;</span> Brawo!
+							Zapami&#281;tajcie ten fragment.<br />
+							<!-- Nauczycielu: podmień poniższy opis na prawdziwą lokalizację kolejnego kodu QR -->
+							<span class="arrow">&#9654;</span> Znajd&#378;cie
+							kolejny kod QR &mdash; zapytajcie nauczyciela, gdzie
+							si&#281; ukrywa!<br />
+							<span class="arrow">&#9654;</span> Zeskanujcie go,
+							by przej&#347;&#263; do nast&#281;pnej zagadki.
+						</div>
+					</div>
+				</div>
+
+				<div
+					id="wiedza-explainer"
+					style="
+						display: none;
+						margin-top: 2.5rem;
+						animation: fade-in 0.6s ease;
+					"
+				>
+					<div class="section-label" style="margin-top: 0">
+						// baza.wiedzy &mdash; odblokowano po uko&#324;czeniu
+						gry
+					</div>
+					<h3
+						style="
+							font-family: var(--mono);
+							font-size: clamp(1.1rem, 3vw, 1.6rem);
+							color: #fff;
+							margin-bottom: 1.2rem;
+							line-height: 1.3;
+						"
+					>
+						Sze&#347;&#263; par &mdash; sze&#347;&#263;
+						przypomnie&#324;
+					</h3>
+					<div
+						style="
+							background: rgba(13, 22, 40, 0.8);
+							border: 1px solid rgba(0, 212, 255, 0.15);
+							border-left: 3px solid var(--cyan);
+							border-radius: 0 6px 6px 0;
+							padding: 1.3rem 1.5rem;
+						"
+					>
+						<div
+							style="
+								font-size: 0.88rem;
+								line-height: 2;
+								color: var(--text);
+							"
+						>
+							<strong style="color: var(--cyan)"
+								>1/2 = 0,5</strong
+							>
+							&mdash; po&#322;owa to pi&#281;&#263;
+							dziesi&#261;tych.<br />
+							<strong style="color: var(--cyan)"
+								>3/4 = 0,75</strong
+							>
+							&mdash; trzy czwarte to siedemdziesi&#261;t
+							pi&#281;&#263; setnych.<br />
+							<strong style="color: var(--cyan)">VII = 7</strong>
+							&mdash; w systemie rzymskim V to 5, a dwa I
+							dodaj&#261; po jednym.<br />
+							<strong style="color: var(--cyan)">IX = 9</strong>
+							&mdash; I przed X oznacza &bdquo;jeden mniej
+							ni&#380; dziesi&#281;&#263;&rdquo;.<br />
+							<strong style="color: var(--cyan)"
+								>9 &times; 6 = 54</strong
+							>
+							&mdash; tabliczka mno&#380;enia warta
+							zapami&#281;tania.<br />
+							<strong style="color: var(--cyan)"
+								>1 m = 100 cm</strong
+							>
+							&mdash; metr zawsze dzieli si&#281; na sto
+							centymetr&oacute;w.
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<div class="divider"></div>
+
+			<section class="fragments-section">
+				<div class="section-label">
+					// klucz.g&#322;&oacute;wny &mdash; rekonstrukcja
+				</div>
+				<h2 class="section-title">Zebrane <span>fragmenty</span></h2>
+				<p class="prose fragments-desc">
+					Ka&#380;dy poprawnie rozwi&#261;zany modu&#322;
+					ods&#322;ania kolejny fragment klucza g&#322;&oacute;wnego.
+					Zbierz wszystkie pi&#281;&#263;, by obudzi&#263; ROBO-5.
+				</p>
+
+				<div class="fragments-row">
+					<div class="fragment-pill collected">DELTA-2 &#10003;</div>
+					<span class="fragment-plus">+</span>
+					<div class="fragment-pill collected">SIGMA-7 &#10003;</div>
+					<span class="fragment-plus">+</span>
+					<div class="fragment-pill collected">THETA-6 &#10003;</div>
+					<span class="fragment-plus">+</span>
+					<div class="fragment-pill collected">LAMBDA-8 &#10003;</div>
+					<span class="fragment-plus">+</span>
+					<div class="fragment-pill locked" id="frag-5">
+						??? &#128274;
+					</div>
+				</div>
+			</section>
+
+			<footer>
+				<p>
+					ROBO-5 PROTOK&Oacute;&#321; NAPRAWY //
+					<span>KLASA 5</span> // MODU&#321; 5 AKTYWNY
+				</p>
+				<p style="margin-top: 0.5rem; color: #2a3a50">
+					// v1.0.0 &mdash; wszystkie kody zarezerwowane dla
+					najlepszych detektyw&oacute;w
+				</p>
+			</footer>
+		</div>
+
+		<script>
+			(function () {
+				const canvas = document.getElementById("matrix-canvas");
+				const ctx = canvas.getContext("2d");
+				const chars = "0123456789+−×÷=%½¼ROBO5";
+				const size = 14;
+				let cols, drops;
+
+				function resize() {
+					canvas.width = window.innerWidth;
+					canvas.height = window.innerHeight;
+					cols = Math.floor(canvas.width / size);
+					drops = drops ? drops.slice(0, cols) : [];
+					while (drops.length < cols) drops.push(Math.random() * -50);
+				}
+
+				resize();
+				window.addEventListener("resize", resize);
+
+				function draw() {
+					ctx.fillStyle = "rgba(7,11,20,0.08)";
+					ctx.fillRect(0, 0, canvas.width, canvas.height);
+					ctx.font = size + "px Share Tech Mono, monospace";
+					for (let i = 0; i < cols; i++) {
+						const ch =
+							chars[Math.floor(Math.random() * chars.length)];
+						const x = i * size;
+						const y = drops[i] * size;
+						const g = Math.random();
+						if (g > 0.85) ctx.fillStyle = "#00D4FF";
+						else if (g > 0.65) ctx.fillStyle = "#7B2FFF";
+						else ctx.fillStyle = "#1A3A5C";
+						ctx.fillText(ch, x, y);
+						if (y > canvas.height && Math.random() > 0.975)
+							drops[i] = 0;
+						drops[i] += 0.4;
+					}
+				}
+
+				setInterval(draw, 45);
+			})();
+
+			function toggleHint() {
+				const box = document.getElementById("hint-box");
+				const arrow = document.getElementById("hint-arrow");
+				box.classList.toggle("visible");
+				arrow.textContent = box.classList.contains("visible")
+					? "\u25BC"
+					: "\u25BA";
+			}
+
+			/* ===== Memory game ===== */
+			const PAIRS = [
+				{ pairId: 1, label: "1/2" },
+				{ pairId: 1, label: "0,5" },
+				{ pairId: 2, label: "3/4" },
+				{ pairId: 2, label: "0,75" },
+				{ pairId: 3, label: "VII" },
+				{ pairId: 3, label: "7" },
+				{ pairId: 4, label: "IX" },
+				{ pairId: 4, label: "9" },
+				{ pairId: 5, label: "9 × 6" },
+				{ pairId: 5, label: "54" },
+				{ pairId: 6, label: "1 m" },
+				{ pairId: 6, label: "100 cm" },
+			];
+
+			function shuffle(arr) {
+				const a = arr.slice();
+				for (let i = a.length - 1; i > 0; i--) {
+					const j = Math.floor(Math.random() * (i + 1));
+					[a[i], a[j]] = [a[j], a[i]];
+				}
+				return a;
+			}
+
+			const deck = shuffle(PAIRS).map((c, idx) => ({
+				...c,
+				cardIndex: idx,
+				matched: false,
+				flipped: false,
+			}));
+
+			let flippedIndices = [];
+			let matchedCount = 0;
+			let attempts = 0;
+			let lock = false;
+
+			function renderGrid() {
+				const grid = document.getElementById("memory-grid");
+				grid.innerHTML = "";
+				deck.forEach((card) => {
+					const el = document.createElement("div");
+					el.className = "mem-card";
+					el.id = "mem-card-" + card.cardIndex;
+					el.onclick = () => flipCard(card.cardIndex);
+					el.innerHTML =
+						'<div class="mem-card-inner">' +
+						'<div class="mem-face mem-front">?</div>' +
+						'<div class="mem-face mem-back">' +
+						card.label +
+						"</div>" +
+						"</div>";
+					grid.appendChild(el);
+				});
+			}
+
+			function flipCard(idx) {
+				if (lock) return;
+				const card = deck[idx];
+				if (card.matched || card.flipped) return;
+				if (flippedIndices.length === 2) return;
+
+				card.flipped = true;
+				document
+					.getElementById("mem-card-" + idx)
+					.classList.add("flipped");
+				flippedIndices.push(idx);
+
+				if (flippedIndices.length === 2) {
+					attempts++;
+					document.getElementById("stat-attempts").textContent =
+						attempts;
+					lock = true;
+					const [i1, i2] = flippedIndices;
+					if (deck[i1].pairId === deck[i2].pairId) {
+						deck[i1].matched = true;
+						deck[i2].matched = true;
+						document
+							.getElementById("mem-card-" + i1)
+							.classList.add("matched");
+						document
+							.getElementById("mem-card-" + i2)
+							.classList.add("matched");
+						matchedCount++;
+						document.getElementById("stat-matched").textContent =
+							matchedCount;
+						flippedIndices = [];
+						lock = false;
+						if (matchedCount === 6) {
+							onAllMatched();
+						}
+					} else {
+						const elA = document.getElementById("mem-card-" + i1);
+						const elB = document.getElementById("mem-card-" + i2);
+						elA.classList.add("shake");
+						elB.classList.add("shake");
+						setTimeout(() => {
+							deck[i1].flipped = false;
+							deck[i2].flipped = false;
+							elA.classList.remove("flipped", "shake");
+							elB.classList.remove("flipped", "shake");
+							flippedIndices = [];
+							lock = false;
+						}, 850);
+					}
+				}
+			}
+
+			function onAllMatched() {
+				const fb = document.getElementById("feedback");
+				fb.className = "feedback ok";
+				fb.textContent =
+					"// WSZYSTKIE PARY ZNALEZIONE :: " +
+					attempts +
+					" pr\u00f3b :: KOLEJNY FRAGMENT ODBLOKOWANY";
+
+				const reveal = document.getElementById("pw-reveal");
+				reveal.classList.add("show");
+
+				const explainer = document.getElementById("wiedza-explainer");
+				explainer.style.display = "block";
+
+				const frag5 = document.getElementById("frag-5");
+				frag5.classList.remove("locked");
+				frag5.classList.add("collected", "just-unlocked");
+				frag5.innerHTML = "OMEGA-1 &#10003;";
+
+				setTimeout(() => {
+					reveal.scrollIntoView({
+						behavior: "smooth",
+						block: "center",
+					});
+				}, 200);
+			}
+
+			renderGrid();
+		</script>
+	</body>
+</html>

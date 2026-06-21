@@ -1,0 +1,1197 @@
+<!doctype html>
+<html lang="pl">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>ZAGADKA 4 — PLAN BOISKA — Escape Room klasa 5</title>
+		<link
+			href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Inter:wght@300;400;600;700&display=swap"
+			rel="stylesheet"
+		/>
+		<style>
+			*,
+			*::before,
+			*::after {
+				box-sizing: border-box;
+				margin: 0;
+				padding: 0;
+			}
+
+			:root {
+				--bg: #070b14;
+				--bg2: #0d1628;
+				--cyan: #00d4ff;
+				--violet: #7b2fff;
+				--red: #ff3366;
+				--gold: #ffd166;
+				--text: #c8d8ee;
+				--text-dim: #5a7090;
+				--mono: "Share Tech Mono", monospace;
+				--sans: "Inter", sans-serif;
+			}
+
+			html {
+				scroll-behavior: smooth;
+			}
+
+			body {
+				background: var(--bg);
+				color: var(--text);
+				font-family: var(--sans);
+				overflow-x: hidden;
+				min-height: 100vh;
+			}
+
+			#matrix-canvas {
+				position: fixed;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+				z-index: 0;
+				opacity: 0.18;
+				pointer-events: none;
+			}
+
+			.layer {
+				position: relative;
+				z-index: 1;
+			}
+
+			.hero {
+				min-height: 70vh;
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				justify-content: center;
+				text-align: center;
+				padding: 4rem 1.5rem 2rem;
+				gap: 1.5rem;
+			}
+
+			.badge {
+				font-family: var(--mono);
+				font-size: 0.7rem;
+				letter-spacing: 0.3em;
+				color: var(--cyan);
+				border: 1px solid var(--cyan);
+				padding: 0.35em 1em;
+				border-radius: 2px;
+				text-transform: uppercase;
+				animation: pulse-border 2.5s ease-in-out infinite;
+			}
+
+			@keyframes pulse-border {
+				0%,
+				100% {
+					box-shadow: 0 0 6px var(--cyan);
+				}
+				50% {
+					box-shadow:
+						0 0 20px var(--cyan),
+						0 0 40px rgba(0, 212, 255, 0.2);
+				}
+			}
+
+			.hero-title {
+				font-family: var(--mono);
+				font-size: clamp(1.8rem, 6vw, 4rem);
+				line-height: 1.1;
+				letter-spacing: -0.01em;
+				color: #fff;
+			}
+
+			.hero-title .accent {
+				color: var(--cyan);
+				text-shadow: 0 0 30px var(--cyan);
+			}
+			.hero-title .accent-v {
+				color: var(--violet);
+				text-shadow: 0 0 30px var(--violet);
+			}
+
+			.hero-sub {
+				font-family: var(--mono);
+				font-size: clamp(0.7rem, 2vw, 0.95rem);
+				color: var(--text-dim);
+				letter-spacing: 0.15em;
+				max-width: 520px;
+			}
+
+			section {
+				padding: clamp(2rem, 6vw, 4rem) clamp(1.5rem, 5vw, 4rem);
+				max-width: 900px;
+				margin: 0 auto;
+			}
+
+			.section-label {
+				font-family: var(--mono);
+				font-size: 0.65rem;
+				letter-spacing: 0.4em;
+				color: var(--cyan);
+				text-transform: uppercase;
+				margin-bottom: 1.2rem;
+			}
+
+			.section-title {
+				font-family: var(--mono);
+				font-size: clamp(1.4rem, 4vw, 2.2rem);
+				color: #fff;
+				margin-bottom: 1.5rem;
+				line-height: 1.2;
+			}
+
+			.section-title span {
+				color: var(--violet);
+			}
+
+			.prose {
+				font-size: clamp(0.9rem, 2vw, 1.05rem);
+				line-height: 1.8;
+				color: var(--text);
+				font-weight: 300;
+				max-width: 680px;
+			}
+
+			.divider {
+				height: 1px;
+				background: linear-gradient(
+					90deg,
+					transparent,
+					var(--cyan),
+					transparent
+				);
+				opacity: 0.25;
+				max-width: 900px;
+				margin: 0 auto;
+			}
+
+			.puzzle-wrapper {
+				background: rgba(10, 14, 26, 0.95);
+				border: 1px solid rgba(123, 47, 255, 0.4);
+				border-radius: 8px;
+				padding: clamp(1.5rem, 4vw, 2.5rem);
+				margin-top: 2rem;
+				box-shadow:
+					0 0 60px rgba(123, 47, 255, 0.1),
+					inset 0 0 40px rgba(0, 0, 0, 0.4);
+				position: relative;
+				overflow: hidden;
+			}
+
+			.puzzle-wrapper::before {
+				content: "";
+				position: absolute;
+				top: 0;
+				left: 0;
+				right: 0;
+				height: 3px;
+				background: linear-gradient(
+					90deg,
+					var(--violet),
+					var(--cyan),
+					var(--violet)
+				);
+				animation: scan 3s linear infinite;
+			}
+
+			@keyframes scan {
+				0% {
+					background-position: -200% center;
+				}
+				100% {
+					background-position: 200% center;
+				}
+			}
+
+			.terminal-header {
+				display: flex;
+				align-items: center;
+				gap: 0.6rem;
+				margin-bottom: 1.5rem;
+				padding-bottom: 1rem;
+				border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+			}
+
+			.t-dot {
+				width: 10px;
+				height: 10px;
+				border-radius: 50%;
+			}
+			.t-dot.r {
+				background: var(--red);
+			}
+			.t-dot.y {
+				background: var(--gold);
+			}
+			.t-dot.g {
+				background: #4ade80;
+			}
+
+			.terminal-title {
+				font-family: var(--mono);
+				font-size: 0.7rem;
+				color: var(--text-dim);
+				margin-left: 0.5rem;
+				letter-spacing: 0.1em;
+			}
+
+			.puzzle-intro {
+				font-family: var(--mono);
+				font-size: 0.8rem;
+				color: #4ade80;
+				margin-bottom: 1.2rem;
+				line-height: 1.6;
+			}
+			.puzzle-intro .prompt::before {
+				content: "> ";
+				color: var(--cyan);
+			}
+
+			.diagram-row {
+				display: flex;
+				justify-content: center;
+				margin-bottom: 1.4rem;
+			}
+
+			.math-block {
+				background: rgba(0, 0, 0, 0.4);
+				border-left: 3px solid var(--cyan);
+				padding: 1.2rem 1.5rem;
+				border-radius: 0 4px 4px 0;
+				margin: 1.2rem 0;
+				font-family: var(--mono);
+				color: #fff;
+				line-height: 2;
+				font-size: clamp(0.85rem, 2.5vw, 1rem);
+			}
+
+			.math-block .row {
+				display: flex;
+				align-items: baseline;
+				gap: 0.6em;
+				flex-wrap: wrap;
+			}
+			.math-block .tag {
+				color: var(--cyan);
+				min-width: 9em;
+				display: inline-block;
+			}
+			.math-block .val {
+				color: var(--gold);
+				font-weight: 700;
+			}
+			.math-block .q {
+				margin-top: 0.8em;
+				padding-top: 0.8em;
+				border-top: 1px dashed rgba(255, 255, 255, 0.12);
+				color: #fff;
+			}
+
+			.hint-toggle {
+				display: inline-flex;
+				align-items: center;
+				gap: 0.5rem;
+				background: none;
+				border: 1px solid rgba(0, 212, 255, 0.3);
+				color: var(--text-dim);
+				font-family: var(--mono);
+				font-size: 0.75rem;
+				letter-spacing: 0.1em;
+				padding: 0.5em 1.2em;
+				border-radius: 3px;
+				cursor: pointer;
+				transition: all 0.2s;
+				margin-bottom: 1.2rem;
+			}
+
+			.hint-toggle:hover {
+				border-color: var(--cyan);
+				color: var(--cyan);
+			}
+
+			.hint-box {
+				background: rgba(0, 212, 255, 0.05);
+				border: 1px solid rgba(0, 212, 255, 0.2);
+				border-radius: 4px;
+				padding: 1rem 1.2rem;
+				font-family: var(--mono);
+				font-size: 0.78rem;
+				color: var(--text-dim);
+				line-height: 1.8;
+				margin-bottom: 1.2rem;
+				display: none;
+			}
+
+			.hint-box.visible {
+				display: block;
+			}
+
+			.answer-row {
+				display: flex;
+				gap: 0.8rem;
+				align-items: stretch;
+				flex-wrap: wrap;
+			}
+
+			.answer-label {
+				font-family: var(--mono);
+				font-size: 0.8rem;
+				color: var(--text-dim);
+				display: flex;
+				align-items: center;
+				white-space: nowrap;
+			}
+
+			.answer-input {
+				flex: 1;
+				min-width: 120px;
+				background: rgba(0, 0, 0, 0.5);
+				border: 1px solid rgba(255, 255, 255, 0.12);
+				border-radius: 4px;
+				padding: 0.65em 1em;
+				font-family: var(--mono);
+				font-size: 0.95rem;
+				color: #fff;
+				outline: none;
+				transition: border-color 0.2s;
+				text-align: center;
+				letter-spacing: 0.1em;
+			}
+
+			.answer-input:focus {
+				border-color: var(--cyan);
+				box-shadow: 0 0 0 2px rgba(0, 212, 255, 0.15);
+			}
+
+			.answer-btn {
+				background: linear-gradient(135deg, var(--violet), #5b1fbf);
+				border: none;
+				border-radius: 4px;
+				padding: 0.65em 1.8em;
+				font-family: var(--mono);
+				font-size: 0.82rem;
+				letter-spacing: 0.12em;
+				color: #fff;
+				cursor: pointer;
+				transition:
+					transform 0.15s,
+					box-shadow 0.2s;
+				white-space: nowrap;
+			}
+
+			.answer-btn:hover {
+				transform: translateY(-1px);
+				box-shadow: 0 4px 20px rgba(123, 47, 255, 0.4);
+			}
+
+			.feedback {
+				margin-top: 1rem;
+				font-family: var(--mono);
+				font-size: 0.82rem;
+				padding: 0.75em 1.1em;
+				border-radius: 4px;
+				display: none;
+				animation: fade-in 0.3s ease;
+			}
+
+			@keyframes fade-in {
+				from {
+					opacity: 0;
+					transform: translateY(4px);
+				}
+				to {
+					opacity: 1;
+					transform: translateY(0);
+				}
+			}
+
+			.feedback.ok {
+				display: block;
+				background: rgba(74, 222, 128, 0.1);
+				border: 1px solid rgba(74, 222, 128, 0.35);
+				color: #4ade80;
+			}
+			.feedback.err {
+				display: block;
+				background: rgba(255, 51, 102, 0.1);
+				border: 1px solid rgba(255, 51, 102, 0.35);
+				color: var(--red);
+			}
+
+			.password-reveal {
+				margin-top: 1.5rem;
+				padding: 1.5rem;
+				background: rgba(0, 212, 255, 0.06);
+				border: 1px solid rgba(0, 212, 255, 0.3);
+				border-radius: 6px;
+				text-align: center;
+				display: none;
+				animation: fade-in 0.5s ease;
+			}
+
+			.password-reveal.show {
+				display: block;
+			}
+
+			.pw-label {
+				font-family: var(--mono);
+				font-size: 0.65rem;
+				letter-spacing: 0.4em;
+				color: var(--text-dim);
+				text-transform: uppercase;
+				margin-bottom: 0.75rem;
+			}
+			.pw-code {
+				font-family: var(--mono);
+				font-size: clamp(1.5rem, 5vw, 2.5rem);
+				color: var(--cyan);
+				letter-spacing: 0.3em;
+				text-shadow: 0 0 30px var(--cyan);
+				font-weight: 700;
+			}
+			.pw-next {
+				margin-top: 1rem;
+				font-family: var(--mono);
+				font-size: 0.78rem;
+				color: var(--text-dim);
+				line-height: 1.7;
+				text-align: left;
+				max-width: 480px;
+				margin-left: auto;
+				margin-right: auto;
+			}
+			.pw-next .arrow {
+				color: var(--gold);
+			}
+			.pw-next .playground {
+				color: var(--cyan);
+				font-weight: 700;
+			}
+
+			/* === Zebrane fragmenty (progress tracker) === */
+			.fragments-section {
+				text-align: center;
+			}
+
+			.fragments-desc {
+				margin: 0 auto;
+				text-align: center;
+			}
+
+			.fragments-row {
+				display: flex;
+				justify-content: center;
+				align-items: center;
+				gap: 0.6rem;
+				flex-wrap: wrap;
+				margin-top: 2.2rem;
+			}
+
+			.fragment-plus {
+				font-family: var(--mono);
+				color: var(--text-dim);
+				font-size: 1rem;
+			}
+
+			.fragment-pill {
+				font-family: var(--mono);
+				font-size: 0.8rem;
+				letter-spacing: 0.06em;
+				padding: 0.65em 1.3em;
+				border-radius: 6px;
+				border: 1px solid rgba(255, 255, 255, 0.1);
+				background: rgba(13, 22, 40, 0.7);
+				color: var(--text-dim);
+				transition: all 0.5s ease;
+			}
+
+			.fragment-pill.locked {
+				opacity: 0.6;
+			}
+
+			.fragment-pill.collected {
+				color: var(--cyan);
+				border-color: var(--cyan);
+				background: rgba(0, 212, 255, 0.06);
+				box-shadow: 0 0 16px rgba(0, 212, 255, 0.25);
+			}
+
+			.fragment-pill.just-unlocked {
+				animation: unlock-pop 0.6s ease;
+			}
+
+			@keyframes unlock-pop {
+				0% {
+					transform: scale(0.85);
+					box-shadow: 0 0 0 rgba(0, 212, 255, 0);
+				}
+				55% {
+					transform: scale(1.12);
+					box-shadow: 0 0 28px rgba(0, 212, 255, 0.55);
+				}
+				100% {
+					transform: scale(1);
+					box-shadow: 0 0 16px rgba(0, 212, 255, 0.25);
+				}
+			}
+
+			footer {
+				text-align: center;
+				padding: 2.5rem 1.5rem;
+				font-family: var(--mono);
+				font-size: 0.65rem;
+				color: var(--text-dim);
+				letter-spacing: 0.15em;
+				border-top: 1px solid rgba(255, 255, 255, 0.04);
+			}
+			footer span {
+				color: var(--cyan);
+			}
+
+			@media (max-width: 480px) {
+				.answer-row {
+					flex-direction: column;
+				}
+				.answer-input {
+					min-width: unset;
+				}
+				.answer-btn {
+					width: 100%;
+				}
+				.math-block .tag {
+					min-width: unset;
+				}
+			}
+		</style>
+	</head>
+	<body>
+		<canvas id="matrix-canvas"></canvas>
+
+		<div class="layer">
+			<section class="hero">
+				<div class="badge">Escape Room — Moduł 4 / 5 — Klasa 5</div>
+
+				<h1 class="hero-title">
+					PLAN<br />
+					<span class="accent">BOISKA</span>
+					<span class="accent-v">ROBO-5</span>
+				</h1>
+
+				<p class="hero-sub">
+					ZNALEZIONO KOD QR #3 :: WYKRYTO USZKODZONY PLAN TERENU ::
+					WYMAGANE OBLICZENIA GEOMETRYCZNE
+				</p>
+			</section>
+
+			<section>
+				<div class="section-label">
+					// log.zdarzenia &mdash; modu&#322; 4
+				</div>
+				<p class="prose">
+					&#346;wietnie! Zeskanowali&#347;cie trzeci kod QR. ROBO-5
+					mia&#322; zaplanowa&#263; teren pod Dzie&#324;
+					Niespodzianek, ale plan boiska zosta&#322; uszkodzony przez
+					awari&#281;. Brakuje jednej liczby &mdash; musicie
+					obliczy&#263; j&#261; sami, u&#380;ywaj&#261;c
+					w&#322;asno&#347;ci prostok&#261;ta i kwadratu.
+				</p>
+			</section>
+
+			<div class="divider"></div>
+
+			<section id="zagadka">
+				<div class="section-label">
+					// terminal.zagadka &mdash; poziom 3 / figury geometryczne
+				</div>
+				<h2 class="section-title">Zagadka <span>geometryczna</span></h2>
+				<p class="prose" style="margin-bottom: 0.5rem">
+					ROBO-5 wy&#347;wietla uszkodzony plan boiska i sceny.
+					Obliczcie, o ile pole boiska jest wi&#281;ksze od pola
+					sceny.
+				</p>
+
+				<div class="puzzle-wrapper">
+					<div class="terminal-header">
+						<div class="t-dot r"></div>
+						<div class="t-dot y"></div>
+						<div class="t-dot g"></div>
+						<span class="terminal-title"
+							>ROBO-5 :: modu&#322; 4 :: zagadka_3.exe :: pole i
+							obw&oacute;d figur</span
+						>
+					</div>
+
+					<div class="diagram-row">
+						<svg
+							width="220"
+							height="140"
+							viewBox="0 0 220 140"
+							xmlns="http://www.w3.org/2000/svg"
+						>
+							<rect
+								x="10"
+								y="15"
+								width="160"
+								height="100"
+								fill="rgba(0,212,255,0.06)"
+								stroke="#00D4FF"
+								stroke-width="2.5"
+								rx="4"
+							/>
+							<text
+								x="90"
+								y="8"
+								text-anchor="middle"
+								font-family="Share Tech Mono, monospace"
+								font-size="11"
+								fill="#FFD166"
+							>
+								12 m
+							</text>
+							<text
+								x="-65"
+								y="68"
+								text-anchor="middle"
+								font-family="Share Tech Mono, monospace"
+								font-size="11"
+								fill="#FFD166"
+								transform="rotate(-90)"
+							>
+								8 m
+							</text>
+							<text
+								x="90"
+								y="70"
+								text-anchor="middle"
+								font-family="Share Tech Mono, monospace"
+								font-size="10"
+								fill="#5a7090"
+							>
+								BOISKO
+							</text>
+
+							<rect
+								x="178"
+								y="65"
+								width="36"
+								height="36"
+								fill="rgba(123,47,255,0.12)"
+								stroke="#7B2FFF"
+								stroke-width="2.5"
+								rx="3"
+							/>
+							<text
+								x="196"
+								y="58"
+								text-anchor="middle"
+								font-family="Share Tech Mono, monospace"
+								font-size="9"
+								fill="#7B2FFF"
+							>
+								bok = ?
+							</text>
+							<text
+								x="196"
+								y="86"
+								text-anchor="middle"
+								font-family="Share Tech Mono, monospace"
+								font-size="8"
+								fill="#c8d8ee"
+							>
+								SCENA
+							</text>
+						</svg>
+					</div>
+
+					<div class="puzzle-intro">
+						<p class="prompt">
+							Boisko ma kszta&#322;t
+							<strong>prostok&#261;ta</strong>.
+						</p>
+						<p class="prompt">
+							Scena ma kszta&#322;t <strong>kwadratu</strong>,
+							kt&oacute;rego bok to po&#322;owa szeroko&#347;ci
+							boiska.
+						</p>
+						<p class="prompt">
+							Obliczcie r&oacute;&#380;nic&#281; p&oacute;l obu
+							figur.
+						</p>
+					</div>
+
+					<div class="math-block">
+						<div class="row">
+							<span class="tag"
+								>D&#322;UGO&#346;&#262; BOISKA:</span
+							>
+							<span class="val">12 m</span>
+						</div>
+						<div class="row">
+							<span class="tag">SZEROKO&#346;&#262; BOISKA:</span>
+							<span class="val">8 m</span>
+						</div>
+						<div class="row">
+							<span class="tag">BOK SCENY:</span>
+							<span>po&#322;owa szeroko&#347;ci boiska</span>
+						</div>
+						<div class="row q">
+							<span class="tag" style="color: #fff"
+								>PYTANIE:</span
+							>
+							<span
+								>O ile pole boiska jest wi&#281;ksze od pola
+								sceny? (w m&sup2;)</span
+							>
+						</div>
+					</div>
+
+					<button class="hint-toggle" onclick="toggleHint()">
+						<span id="hint-arrow">&#9654;</span> POKA&#379;
+						WSKAZ&Oacute;WK&#280; KROK PO KROKU
+					</button>
+
+					<!-- WSKAZÓWKA — tylko metodologia, bez gotowego wyniku -->
+					<div class="hint-box" id="hint-box">
+						<div style="color: var(--cyan); margin-bottom: 0.6em">
+							// KROK 1 &mdash; Oblicz pole boiska:
+						</div>
+						<div
+							style="
+								color: var(--text-dim);
+								line-height: 1.75;
+								margin-bottom: 0.9em;
+							"
+						>
+							Pole prostok&#261;ta liczymy ze wzoru
+							<strong style="color: #fff">P = a &times; b</strong
+							>, gdzie a i b to d&#322;ugo&#347;&#263; i
+							szeroko&#347;&#263; boiska.
+						</div>
+
+						<div style="color: var(--cyan); margin-bottom: 0.5em">
+							// KROK 2 &mdash; Wyznacz bok sceny:
+						</div>
+						<div
+							style="
+								color: var(--text-dim);
+								line-height: 1.75;
+								margin-bottom: 0.9em;
+							"
+						>
+							Bok sceny to po&#322;owa szeroko&#347;ci boiska
+							&mdash; podziel szeroko&#347;&#263; boiska przez 2.
+						</div>
+
+						<div style="color: var(--cyan); margin-bottom: 0.5em">
+							// KROK 3 &mdash; Oblicz pole sceny:
+						</div>
+						<div
+							style="
+								color: var(--text-dim);
+								line-height: 1.75;
+								margin-bottom: 0.9em;
+							"
+						>
+							Pole kwadratu liczymy ze wzoru
+							<strong style="color: #fff">P = a &times; a</strong>
+							(bok razy bok), u&#380;ywaj&#261;c wyniku z kroku 2.
+						</div>
+
+						<div style="color: var(--cyan); margin-bottom: 0.5em">
+							// KROK 4 &mdash; Por&oacute;wnaj pola:
+						</div>
+						<div style="color: var(--text-dim); line-height: 1.75">
+							Odejmij pole sceny (krok 3) od pola boiska (krok 1).
+							To Tw&oacute;j wynik w metrach kwadratowych.
+						</div>
+					</div>
+
+					<div class="answer-row">
+						<span class="answer-label">Różnica =</span>
+						<input
+							class="answer-input"
+							id="answer"
+							type="number"
+							placeholder="___"
+							autocomplete="off"
+							onkeydown="
+								if (event.key === 'Enter') checkAnswer();
+							"
+						/>
+						<span class="answer-label">m&sup2;</span>
+						<button class="answer-btn" onclick="checkAnswer()">
+							WERYFIKUJ &rarr;
+						</button>
+					</div>
+
+					<div class="feedback" id="feedback"></div>
+
+					<div class="password-reveal" id="pw-reveal">
+						<div class="pw-label">
+							// fragment kodu :: poziom 3 ::
+						</div>
+						<div class="pw-code">LAMBDA&ndash;8</div>
+						<div class="pw-next">
+							<span class="arrow">&#9654;</span>
+							Zapami&#281;tajcie ten fragment.<br />
+							<span class="arrow">&#9654;</span> Kolejn&#261;
+							podpowied&#378; znajdziecie na
+							<span class="playground">placu zabaw</span> &mdash;
+							szukajcie tam czwartego kodu QR!<br />
+							<span class="arrow">&#9654;</span> Zeskanujcie go,
+							by przej&#347;&#263; do zagadki numer 5.
+						</div>
+					</div>
+				</div>
+
+				<div
+					id="wiedza-explainer"
+					style="
+						display: none;
+						margin-top: 2.5rem;
+						animation: fade-in 0.6s ease;
+					"
+				>
+					<div class="section-label" style="margin-top: 0">
+						// baza.wiedzy &mdash; odblokowano po rozwi&#261;zaniu
+					</div>
+					<h3
+						style="
+							font-family: var(--mono);
+							font-size: clamp(1.1rem, 3vw, 1.6rem);
+							color: #fff;
+							margin-bottom: 1.2rem;
+							line-height: 1.3;
+						"
+					>
+						Pole i obw&oacute;d<br />prostok&#261;ta i kwadratu
+					</h3>
+
+					<div
+						style="
+							background: rgba(13, 22, 40, 0.8);
+							border: 1px solid rgba(0, 212, 255, 0.15);
+							border-left: 3px solid var(--cyan);
+							border-radius: 0 6px 6px 0;
+							padding: 1.3rem 1.5rem;
+							margin-bottom: 1.2rem;
+						"
+					>
+						<div
+							style="
+								font-family: var(--mono);
+								font-size: 0.62rem;
+								letter-spacing: 0.25em;
+								color: var(--cyan);
+								margin-bottom: 0.6rem;
+							"
+						>
+							// WZORY
+						</div>
+						<div
+							style="
+								font-family: var(--mono);
+								font-size: clamp(0.85rem, 2vw, 1rem);
+								color: #fff;
+								background: rgba(0, 0, 0, 0.35);
+								padding: 1rem 1.2rem;
+								border-radius: 4px;
+								line-height: 2.3;
+							"
+						>
+							Prostok&#261;t: &nbsp; P =
+							<span style="color: var(--gold)">a &times; b</span>
+							&nbsp;&nbsp;&nbsp; Obw&oacute;d =
+							<span style="color: var(--cyan)"
+								>2 &times; (a + b)</span
+							>
+							<br />
+							Kwadrat: &nbsp; P =
+							<span style="color: var(--gold)">a &times; a</span>
+							&nbsp;&nbsp;&nbsp; Obw&oacute;d =
+							<span style="color: var(--cyan)">4 &times; a</span>
+						</div>
+						<p
+							style="
+								font-size: 0.85rem;
+								line-height: 1.8;
+								color: var(--text-dim);
+								margin-top: 0.9rem;
+							"
+						>
+							<strong style="color: #fff">Pole</strong>
+							m&oacute;wi nam, ile miejsca zajmuje figura
+							(jednostka: m&sup2;, cm&sup2;), a
+							<strong style="color: #fff">obw&oacute;d</strong>
+							to d&#322;ugo&#347;&#263; ca&#322;ej linii
+							wok&oacute;&#322; figury (jednostka: m, cm).
+						</p>
+					</div>
+
+					<div
+						style="
+							background: rgba(74, 222, 128, 0.04);
+							border: 1px solid rgba(74, 222, 128, 0.2);
+							border-radius: 6px;
+							padding: 1.4rem 1.5rem;
+						"
+					>
+						<div
+							style="
+								font-family: var(--mono);
+								font-size: 0.62rem;
+								letter-spacing: 0.22em;
+								color: #4ade80;
+								margin-bottom: 0.9rem;
+							"
+						>
+							// PRZYK&#321;AD &mdash; nasza zagadka krok po kroku
+						</div>
+						<div
+							style="
+								font-size: 0.85rem;
+								line-height: 1.85;
+								color: var(--text);
+							"
+						>
+							<strong
+								style="color: #fff; font-family: var(--mono)"
+								>Pole boiska (prostok&#261;t 12 m &times; 8
+								m):</strong
+							><br />
+							<span
+								style="
+									font-family: var(--mono);
+									color: var(--text-dim);
+								"
+							>
+								P = 12 &times; 8 =
+								<span style="color: var(--gold)"
+									>96 m&sup2;</span
+								>
+							</span>
+							<br /><br />
+							<strong
+								style="color: #fff; font-family: var(--mono)"
+								>Bok sceny (po&#322;owa szeroko&#347;ci
+								boiska):</strong
+							><br />
+							<span
+								style="
+									font-family: var(--mono);
+									color: var(--text-dim);
+								"
+							>
+								8 : 2 =
+								<span style="color: var(--gold)">4 m</span>
+							</span>
+							<br /><br />
+							<strong
+								style="color: #fff; font-family: var(--mono)"
+								>Pole sceny (kwadrat o boku 4 m):</strong
+							><br />
+							<span
+								style="
+									font-family: var(--mono);
+									color: var(--text-dim);
+								"
+							>
+								P = 4 &times; 4 =
+								<span style="color: var(--gold)"
+									>16 m&sup2;</span
+								>
+							</span>
+							<br /><br />
+							<strong
+								style="color: #fff; font-family: var(--mono)"
+								>R&oacute;&#380;nica p&oacute;l:</strong
+							>
+							<span
+								style="
+									font-family: var(--mono);
+									color: var(--cyan);
+									font-size: 1.05rem;
+								"
+							>
+								96 &minus; 16 =
+								<span style="color: #4ade80; font-size: 1.15rem"
+									>80 m&sup2;</span
+								>
+							</span>
+							<br /><br />
+							<span
+								style="
+									color: var(--text-dim);
+									font-size: 0.82rem;
+								"
+							>
+								Boisko jest a&#380; o 80 m&sup2; wi&#281;ksze od
+								sceny &mdash; b&#281;dzie mn&oacute;stwo miejsca
+								na gry! &#127942;
+							</span>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<div class="divider"></div>
+
+			<section class="fragments-section">
+				<div class="section-label">
+					// klucz.g&#322;&oacute;wny &mdash; rekonstrukcja
+				</div>
+				<h2 class="section-title">Zebrane <span>fragmenty</span></h2>
+				<p class="prose fragments-desc">
+					Ka&#380;dy poprawnie rozwi&#261;zany modu&#322;
+					ods&#322;ania kolejny fragment klucza g&#322;&oacute;wnego.
+					Zbierz wszystkie pi&#281;&#263;, by obudzi&#263; ROBO-5.
+				</p>
+
+				<div class="fragments-row">
+					<div class="fragment-pill collected">DELTA-2 &#10003;</div>
+					<span class="fragment-plus">+</span>
+					<div class="fragment-pill collected">SIGMA-7 &#10003;</div>
+					<span class="fragment-plus">+</span>
+					<div class="fragment-pill collected">THETA-6 &#10003;</div>
+					<span class="fragment-plus">+</span>
+					<div class="fragment-pill locked" id="frag-4">
+						??? &#128274;
+					</div>
+					<span class="fragment-plus">+</span>
+					<div class="fragment-pill locked" id="frag-5">
+						??? &#128274;
+					</div>
+				</div>
+			</section>
+
+			<footer>
+				<p>
+					ROBO-5 PROTOK&Oacute;&#321; NAPRAWY //
+					<span>KLASA 5</span> // MODU&#321; 4 AKTYWNY
+				</p>
+				<p style="margin-top: 0.5rem; color: #2a3a50">
+					// v1.0.0 &mdash; wszystkie kody zarezerwowane dla
+					najlepszych detektyw&oacute;w
+				</p>
+			</footer>
+		</div>
+
+		<script>
+			(function () {
+				const canvas = document.getElementById("matrix-canvas");
+				const ctx = canvas.getContext("2d");
+				const chars = "0123456789+−×÷=%½¼ROBO5";
+				const size = 14;
+				let cols, drops;
+
+				function resize() {
+					canvas.width = window.innerWidth;
+					canvas.height = window.innerHeight;
+					cols = Math.floor(canvas.width / size);
+					drops = drops ? drops.slice(0, cols) : [];
+					while (drops.length < cols) drops.push(Math.random() * -50);
+				}
+
+				resize();
+				window.addEventListener("resize", resize);
+
+				function draw() {
+					ctx.fillStyle = "rgba(7,11,20,0.08)";
+					ctx.fillRect(0, 0, canvas.width, canvas.height);
+					ctx.font = size + "px Share Tech Mono, monospace";
+					for (let i = 0; i < cols; i++) {
+						const ch =
+							chars[Math.floor(Math.random() * chars.length)];
+						const x = i * size;
+						const y = drops[i] * size;
+						const g = Math.random();
+						if (g > 0.85) ctx.fillStyle = "#00D4FF";
+						else if (g > 0.65) ctx.fillStyle = "#7B2FFF";
+						else ctx.fillStyle = "#1A3A5C";
+						ctx.fillText(ch, x, y);
+						if (y > canvas.height && Math.random() > 0.975)
+							drops[i] = 0;
+						drops[i] += 0.4;
+					}
+				}
+
+				setInterval(draw, 45);
+			})();
+
+			function toggleHint() {
+				const box = document.getElementById("hint-box");
+				const arrow = document.getElementById("hint-arrow");
+				box.classList.toggle("visible");
+				arrow.textContent = box.classList.contains("visible")
+					? "\u25BC"
+					: "\u25BA";
+			}
+
+			let attempts = 0;
+			const CORRECT = 80;
+
+			function checkAnswer() {
+				const val = parseFloat(document.getElementById("answer").value);
+				const fb = document.getElementById("feedback");
+				const reveal = document.getElementById("pw-reveal");
+				const explainer = document.getElementById("wiedza-explainer");
+				attempts++;
+
+				fb.className = "feedback";
+				fb.style.display = "none";
+
+				if (isNaN(val)) {
+					fb.textContent =
+						"// B\u0141\u0104D: Wprowad\u017a warto\u015b\u0107 liczbow\u0105.";
+					fb.classList.add("err");
+					return;
+				}
+
+				if (val === CORRECT) {
+					fb.textContent =
+						"// WERYFIKACJA POZYTYWNA :: r\u00f3\u017cnica p\u00f3l = 80 m\u00b2 :: FRAGMENT KODU ODBLOKOWANY // pr\u00f3ba " +
+						attempts;
+					fb.classList.add("ok");
+					reveal.classList.add("show");
+					explainer.style.display = "block";
+
+					const frag4 = document.getElementById("frag-4");
+					frag4.classList.remove("locked");
+					frag4.classList.add("collected", "just-unlocked");
+					frag4.innerHTML = "LAMBDA-8 &#10003;";
+
+					setTimeout(() => {
+						reveal.scrollIntoView({
+							behavior: "smooth",
+							block: "center",
+						});
+					}, 150);
+					setTimeout(() => {
+						explainer.scrollIntoView({
+							behavior: "smooth",
+							block: "start",
+						});
+					}, 1800);
+				} else {
+					const msgs = [
+						"// SPRAWD\u017a JESZCZE RAZ :: r\u00f3\u017cnica \u2260 " +
+							val +
+							" :: Czy na pewno obliczy\u0142e\u015b/a\u015b oba pola osobno?",
+						"// PR\u00d3BA " +
+							attempts +
+							" :: Podpowied\u017a: pole boiska = 12 \u00d7 8. Bok sceny to po\u0142owa szeroko\u015bci boiska.",
+						"// ALERT :: " +
+							attempts +
+							" nieudane pr\u00f3by :: Skorzystaj z przycisku \u201ePoka\u017c wskaz\u00f3wk\u0119\u201d \u2014 rozpisano krok po kroku.",
+					];
+					fb.textContent =
+						msgs[Math.min(attempts - 1, msgs.length - 1)];
+					fb.classList.add("err");
+					document.getElementById("answer").value = "";
+					document.getElementById("answer").focus();
+				}
+			}
+		</script>
+	</body>
+</html>

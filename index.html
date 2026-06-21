@@ -1,0 +1,1669 @@
+<!doctype html>
+<html lang="pl">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>ZAGINIONY KOD ROBO-5 — Escape Room klasa 5</title>
+		<link
+			href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Inter:wght@300;400;600;700&display=swap"
+			rel="stylesheet"
+		/>
+		<style>
+			*,
+			*::before,
+			*::after {
+				box-sizing: border-box;
+				margin: 0;
+				padding: 0;
+			}
+
+			:root {
+				--bg: #070b14;
+				--bg2: #0d1628;
+				--cyan: #00d4ff;
+				--violet: #7b2fff;
+				--red: #ff3366;
+				--gold: #ffd166;
+				--text: #c8d8ee;
+				--text-dim: #5a7090;
+				--mono: "Share Tech Mono", monospace;
+				--sans: "Inter", sans-serif;
+			}
+
+			html {
+				scroll-behavior: smooth;
+			}
+
+			body {
+				background: var(--bg);
+				color: var(--text);
+				font-family: var(--sans);
+				overflow-x: hidden;
+				min-height: 100vh;
+			}
+
+			#matrix-canvas {
+				position: fixed;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+				z-index: 0;
+				opacity: 0.18;
+				pointer-events: none;
+			}
+
+			.layer {
+				position: relative;
+				z-index: 1;
+			}
+
+			.hero {
+				min-height: 100vh;
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				justify-content: center;
+				text-align: center;
+				padding: 2rem 1.5rem;
+				gap: 1.5rem;
+			}
+
+			.badge {
+				font-family: var(--mono);
+				font-size: 0.7rem;
+				letter-spacing: 0.3em;
+				color: var(--cyan);
+				border: 1px solid var(--cyan);
+				padding: 0.35em 1em;
+				border-radius: 2px;
+				text-transform: uppercase;
+				animation: pulse-border 2.5s ease-in-out infinite;
+			}
+
+			@keyframes pulse-border {
+				0%,
+				100% {
+					box-shadow: 0 0 6px var(--cyan);
+				}
+				50% {
+					box-shadow:
+						0 0 20px var(--cyan),
+						0 0 40px rgba(0, 212, 255, 0.2);
+				}
+			}
+
+			.hero-title {
+				font-family: var(--mono);
+				font-size: clamp(2rem, 7vw, 5rem);
+				line-height: 1.1;
+				letter-spacing: -0.01em;
+				color: #fff;
+			}
+
+			.hero-title .accent {
+				color: var(--cyan);
+				text-shadow: 0 0 30px var(--cyan);
+			}
+			.hero-title .accent-v {
+				color: var(--violet);
+				text-shadow: 0 0 30px var(--violet);
+			}
+
+			.hero-sub {
+				font-family: var(--mono);
+				font-size: clamp(0.75rem, 2vw, 1rem);
+				color: var(--text-dim);
+				letter-spacing: 0.15em;
+				max-width: 480px;
+			}
+
+			.hero-cta {
+				display: inline-block;
+				margin-top: 0.5rem;
+				background: linear-gradient(135deg, var(--cyan), var(--violet));
+				color: #fff;
+				font-family: var(--mono);
+				font-size: 0.9rem;
+				letter-spacing: 0.15em;
+				padding: 0.85em 2.5em;
+				border-radius: 3px;
+				text-decoration: none;
+				font-weight: 700;
+				transition:
+					transform 0.2s,
+					box-shadow 0.2s;
+				box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+			}
+
+			.hero-cta:hover {
+				transform: translateY(-2px);
+				box-shadow: 0 0 40px rgba(0, 212, 255, 0.5);
+			}
+
+			.scroll-indicator {
+				position: absolute;
+				bottom: 2rem;
+				left: 50%;
+				transform: translateX(-50%);
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				gap: 0.4rem;
+				color: var(--text-dim);
+				font-family: var(--mono);
+				font-size: 0.65rem;
+				letter-spacing: 0.2em;
+				animation: bounce 2s ease-in-out infinite;
+			}
+
+			.scroll-indicator svg {
+				opacity: 0.5;
+			}
+
+			@keyframes bounce {
+				0%,
+				100% {
+					transform: translateX(-50%) translateY(0);
+				}
+				50% {
+					transform: translateX(-50%) translateY(6px);
+				}
+			}
+
+			section {
+				padding: clamp(3rem, 8vw, 6rem) clamp(1.5rem, 5vw, 4rem);
+				max-width: 900px;
+				margin: 0 auto;
+			}
+
+			.section-label {
+				font-family: var(--mono);
+				font-size: 0.65rem;
+				letter-spacing: 0.4em;
+				color: var(--cyan);
+				text-transform: uppercase;
+				margin-bottom: 1.2rem;
+			}
+
+			.section-title {
+				font-family: var(--mono);
+				font-size: clamp(1.4rem, 4vw, 2.2rem);
+				color: #fff;
+				margin-bottom: 1.5rem;
+				line-height: 1.2;
+			}
+
+			.section-title span {
+				color: var(--violet);
+			}
+
+			.prose {
+				font-size: clamp(0.9rem, 2vw, 1.05rem);
+				line-height: 1.8;
+				color: var(--text);
+				font-weight: 300;
+				max-width: 680px;
+			}
+
+			.divider {
+				height: 1px;
+				background: linear-gradient(
+					90deg,
+					transparent,
+					var(--cyan),
+					transparent
+				);
+				opacity: 0.25;
+				max-width: 900px;
+				margin: 0 auto;
+			}
+
+			.story-grid {
+				display: grid;
+				grid-template-columns: 1fr 1fr;
+				gap: 1.5rem;
+				margin-top: 2.5rem;
+			}
+
+			@media (max-width: 640px) {
+				.story-grid {
+					grid-template-columns: 1fr;
+				}
+			}
+
+			.story-card {
+				background: rgba(13, 22, 40, 0.7);
+				border: 1px solid rgba(0, 212, 255, 0.15);
+				border-radius: 6px;
+				padding: 1.5rem;
+				position: relative;
+				overflow: hidden;
+				transition: border-color 0.3s;
+			}
+
+			.story-card::before {
+				content: "";
+				position: absolute;
+				top: 0;
+				left: 0;
+				width: 3px;
+				height: 100%;
+			}
+
+			.story-card.c1::before {
+				background: var(--cyan);
+			}
+			.story-card.c2::before {
+				background: var(--violet);
+			}
+			.story-card.c3::before {
+				background: var(--red);
+			}
+			.story-card.c4::before {
+				background: var(--gold);
+			}
+			.story-card:hover {
+				border-color: rgba(0, 212, 255, 0.4);
+			}
+
+			.card-icon {
+				font-size: 1.6rem;
+				margin-bottom: 0.75rem;
+			}
+			.card-title {
+				font-family: var(--mono);
+				font-size: 0.8rem;
+				letter-spacing: 0.15em;
+				color: var(--cyan);
+				margin-bottom: 0.5rem;
+			}
+			.card-text {
+				font-size: 0.88rem;
+				line-height: 1.7;
+				color: var(--text-dim);
+			}
+
+			.timeline {
+				margin-top: 2.5rem;
+				display: flex;
+				flex-direction: column;
+				gap: 0;
+			}
+
+			.tl-item {
+				display: grid;
+				grid-template-columns: 3rem 1fr;
+				gap: 1rem;
+				padding-bottom: 2rem;
+				position: relative;
+			}
+
+			.tl-item:last-child {
+				padding-bottom: 0;
+			}
+
+			.tl-dot-col {
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+			}
+
+			.tl-dot {
+				width: 2.2rem;
+				height: 2.2rem;
+				border-radius: 50%;
+				background: var(--bg2);
+				border: 2px solid var(--cyan);
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				font-family: var(--mono);
+				font-size: 0.75rem;
+				color: var(--cyan);
+				flex-shrink: 0;
+				box-shadow: 0 0 12px rgba(0, 212, 255, 0.3);
+			}
+
+			.tl-line {
+				flex: 1;
+				width: 2px;
+				background: linear-gradient(
+					to bottom,
+					rgba(0, 212, 255, 0.3),
+					rgba(0, 212, 255, 0.05)
+				);
+				margin-top: 0.3rem;
+			}
+
+			.tl-item:last-child .tl-line {
+				display: none;
+			}
+			.tl-content {
+				padding-top: 0.35rem;
+			}
+			.tl-title {
+				font-family: var(--mono);
+				font-size: 0.85rem;
+				color: #fff;
+				letter-spacing: 0.1em;
+				margin-bottom: 0.35rem;
+			}
+			.tl-desc {
+				font-size: 0.85rem;
+				color: var(--text-dim);
+				line-height: 1.65;
+			}
+
+			.puzzle-wrapper {
+				background: rgba(10, 14, 26, 0.95);
+				border: 1px solid rgba(123, 47, 255, 0.4);
+				border-radius: 8px;
+				padding: clamp(1.5rem, 4vw, 2.5rem);
+				margin-top: 2rem;
+				box-shadow:
+					0 0 60px rgba(123, 47, 255, 0.1),
+					inset 0 0 40px rgba(0, 0, 0, 0.4);
+				position: relative;
+				overflow: hidden;
+			}
+
+			.puzzle-wrapper::before {
+				content: "";
+				position: absolute;
+				top: 0;
+				left: 0;
+				right: 0;
+				height: 3px;
+				background: linear-gradient(
+					90deg,
+					var(--violet),
+					var(--cyan),
+					var(--violet)
+				);
+				animation: scan 3s linear infinite;
+			}
+
+			@keyframes scan {
+				0% {
+					background-position: -200% center;
+				}
+				100% {
+					background-position: 200% center;
+				}
+			}
+
+			.terminal-header {
+				display: flex;
+				align-items: center;
+				gap: 0.6rem;
+				margin-bottom: 1.5rem;
+				padding-bottom: 1rem;
+				border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+			}
+
+			.t-dot {
+				width: 10px;
+				height: 10px;
+				border-radius: 50%;
+			}
+			.t-dot.r {
+				background: var(--red);
+			}
+			.t-dot.y {
+				background: var(--gold);
+			}
+			.t-dot.g {
+				background: #4ade80;
+			}
+
+			.terminal-title {
+				font-family: var(--mono);
+				font-size: 0.7rem;
+				color: var(--text-dim);
+				margin-left: 0.5rem;
+				letter-spacing: 0.1em;
+			}
+
+			.puzzle-intro {
+				font-family: var(--mono);
+				font-size: 0.8rem;
+				color: #4ade80;
+				margin-bottom: 1.2rem;
+				line-height: 1.6;
+			}
+			.puzzle-intro .prompt::before {
+				content: "> ";
+				color: var(--cyan);
+			}
+
+			.math-block {
+				background: rgba(0, 0, 0, 0.4);
+				border-left: 3px solid var(--cyan);
+				padding: 1.2rem 1.5rem;
+				border-radius: 0 4px 4px 0;
+				margin: 1.2rem 0;
+				font-family: var(--mono);
+				color: #fff;
+				line-height: 2;
+				font-size: clamp(0.85rem, 2.5vw, 1rem);
+			}
+
+			.math-block .eq {
+				color: var(--gold);
+			}
+			.math-block .coef {
+				color: var(--cyan);
+			}
+
+			.hint-toggle {
+				display: inline-flex;
+				align-items: center;
+				gap: 0.5rem;
+				background: none;
+				border: 1px solid rgba(0, 212, 255, 0.3);
+				color: var(--text-dim);
+				font-family: var(--mono);
+				font-size: 0.75rem;
+				letter-spacing: 0.1em;
+				padding: 0.5em 1.2em;
+				border-radius: 3px;
+				cursor: pointer;
+				transition: all 0.2s;
+				margin-bottom: 1.2rem;
+			}
+
+			.hint-toggle:hover {
+				border-color: var(--cyan);
+				color: var(--cyan);
+			}
+
+			.hint-box {
+				background: rgba(0, 212, 255, 0.05);
+				border: 1px solid rgba(0, 212, 255, 0.2);
+				border-radius: 4px;
+				padding: 1rem 1.2rem;
+				font-family: var(--mono);
+				font-size: 0.78rem;
+				color: var(--text-dim);
+				line-height: 1.8;
+				margin-bottom: 1.2rem;
+				display: none;
+			}
+
+			.hint-box.visible {
+				display: block;
+			}
+			.hint-box .hl {
+				color: var(--cyan);
+			}
+
+			.answer-row {
+				display: flex;
+				gap: 0.8rem;
+				align-items: stretch;
+				flex-wrap: wrap;
+			}
+
+			.answer-label {
+				font-family: var(--mono);
+				font-size: 0.8rem;
+				color: var(--text-dim);
+				display: flex;
+				align-items: center;
+				white-space: nowrap;
+			}
+
+			.answer-input {
+				flex: 1;
+				min-width: 120px;
+				background: rgba(0, 0, 0, 0.5);
+				border: 1px solid rgba(255, 255, 255, 0.12);
+				border-radius: 4px;
+				padding: 0.65em 1em;
+				font-family: var(--mono);
+				font-size: 0.95rem;
+				color: #fff;
+				outline: none;
+				transition: border-color 0.2s;
+				text-align: center;
+				letter-spacing: 0.1em;
+			}
+
+			.answer-input:focus {
+				border-color: var(--cyan);
+				box-shadow: 0 0 0 2px rgba(0, 212, 255, 0.15);
+			}
+
+			.answer-btn {
+				background: linear-gradient(135deg, var(--violet), #5b1fbf);
+				border: none;
+				border-radius: 4px;
+				padding: 0.65em 1.8em;
+				font-family: var(--mono);
+				font-size: 0.82rem;
+				letter-spacing: 0.12em;
+				color: #fff;
+				cursor: pointer;
+				transition:
+					transform 0.15s,
+					box-shadow 0.2s;
+				white-space: nowrap;
+			}
+
+			.answer-btn:hover {
+				transform: translateY(-1px);
+				box-shadow: 0 4px 20px rgba(123, 47, 255, 0.4);
+			}
+
+			.feedback {
+				margin-top: 1rem;
+				font-family: var(--mono);
+				font-size: 0.82rem;
+				padding: 0.75em 1.1em;
+				border-radius: 4px;
+				display: none;
+				animation: fade-in 0.3s ease;
+			}
+
+			@keyframes fade-in {
+				from {
+					opacity: 0;
+					transform: translateY(4px);
+				}
+				to {
+					opacity: 1;
+					transform: translateY(0);
+				}
+			}
+
+			.feedback.ok {
+				display: block;
+				background: rgba(74, 222, 128, 0.1);
+				border: 1px solid rgba(74, 222, 128, 0.35);
+				color: #4ade80;
+			}
+			.feedback.err {
+				display: block;
+				background: rgba(255, 51, 102, 0.1);
+				border: 1px solid rgba(255, 51, 102, 0.35);
+				color: var(--red);
+			}
+
+			.password-reveal {
+				margin-top: 1.5rem;
+				padding: 1.5rem;
+				background: rgba(0, 212, 255, 0.06);
+				border: 1px solid rgba(0, 212, 255, 0.3);
+				border-radius: 6px;
+				text-align: center;
+				display: none;
+				animation: fade-in 0.5s ease;
+			}
+
+			.password-reveal.show {
+				display: block;
+			}
+
+			.pw-label {
+				font-family: var(--mono);
+				font-size: 0.65rem;
+				letter-spacing: 0.4em;
+				color: var(--text-dim);
+				text-transform: uppercase;
+				margin-bottom: 0.75rem;
+			}
+			.pw-code {
+				font-family: var(--mono);
+				font-size: clamp(1.5rem, 5vw, 2.5rem);
+				color: var(--cyan);
+				letter-spacing: 0.3em;
+				text-shadow: 0 0 30px var(--cyan);
+				font-weight: 700;
+			}
+			.pw-next {
+				margin-top: 1rem;
+				font-family: var(--mono);
+				font-size: 0.78rem;
+				color: var(--text-dim);
+				line-height: 1.7;
+			}
+			.pw-next .arrow {
+				color: var(--gold);
+			}
+
+			.qr-section {
+				text-align: center;
+			}
+
+			.qr-grid {
+				display: flex;
+				justify-content: center;
+				gap: 2rem;
+				flex-wrap: wrap;
+				margin-top: 2rem;
+			}
+
+			.qr-item {
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				gap: 0.75rem;
+				opacity: 0.5;
+				filter: grayscale(1);
+				position: relative;
+			}
+			.qr-item.active {
+				opacity: 1;
+				filter: none;
+			}
+			.qr-item.locked::after {
+				content: "🔒";
+				position: absolute;
+				top: 50%;
+				left: 50%;
+				transform: translate(-50%, -50%);
+				font-size: 1.8rem;
+			}
+
+			.qr-box {
+				width: 80px;
+				height: 80px;
+				border: 2px solid rgba(0, 212, 255, 0.3);
+				border-radius: 6px;
+				background: var(--bg2);
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				font-size: 2rem;
+			}
+			.qr-item.active .qr-box {
+				border-color: var(--cyan);
+				box-shadow: 0 0 20px rgba(0, 212, 255, 0.25);
+				animation: pulse-border 2.5s infinite;
+			}
+			.qr-label {
+				font-family: var(--mono);
+				font-size: 0.65rem;
+				letter-spacing: 0.15em;
+				color: var(--text-dim);
+				text-transform: uppercase;
+			}
+
+			footer {
+				text-align: center;
+				padding: 2.5rem 1.5rem;
+				font-family: var(--mono);
+				font-size: 0.65rem;
+				color: var(--text-dim);
+				letter-spacing: 0.15em;
+				border-top: 1px solid rgba(255, 255, 255, 0.04);
+			}
+			footer span {
+				color: var(--cyan);
+			}
+
+			.glitch {
+				position: relative;
+				display: inline-block;
+			}
+			.glitch::before,
+			.glitch::after {
+				content: attr(data-text);
+				position: absolute;
+				top: 0;
+				left: 0;
+				width: 100%;
+				overflow: hidden;
+			}
+			.glitch::before {
+				color: var(--cyan);
+				animation: glitch1 4s infinite;
+				clip-path: polygon(0 20%, 100% 20%, 100% 35%, 0 35%);
+				transform: translateX(-2px);
+			}
+			.glitch::after {
+				color: var(--violet);
+				animation: glitch2 4s infinite;
+				clip-path: polygon(0 65%, 100% 65%, 100% 80%, 0 80%);
+				transform: translateX(2px);
+			}
+
+			@keyframes glitch1 {
+				0%,
+				90%,
+				100% {
+					transform: translateX(-2px);
+					opacity: 0;
+				}
+				92%,
+				96% {
+					transform: translateX(-4px);
+					opacity: 0.8;
+				}
+				94% {
+					transform: translateX(2px);
+					opacity: 0.6;
+				}
+			}
+
+			@keyframes glitch2 {
+				0%,
+				93%,
+				100% {
+					transform: translateX(2px);
+					opacity: 0;
+				}
+				95%,
+				99% {
+					transform: translateX(4px);
+					opacity: 0.7;
+				}
+				97% {
+					transform: translateX(-2px);
+					opacity: 0.5;
+				}
+			}
+
+			@media (max-width: 480px) {
+				.answer-row {
+					flex-direction: column;
+				}
+				.answer-input {
+					min-width: unset;
+				}
+				.answer-btn {
+					width: 100%;
+				}
+			}
+		</style>
+	</head>
+	<body>
+		<canvas id="matrix-canvas"></canvas>
+
+		<div class="layer">
+			<section class="hero">
+				<div class="badge">Escape Room — Klasa 5</div>
+
+				<h1 class="hero-title">
+					<span class="glitch" data-text="ZAGINIONY">ZAGINIONY</span
+					><br />
+					<span class="accent">KOD</span>
+					<span style="color: #fff"> ROBOTA </span>
+					<span class="accent-v">ROBO-5</span>
+				</h1>
+
+				<p class="hero-sub">
+					ALARM SZKOLNY :: ROBO-5 ZAWIESI&#321; SI&#280; :: PLAN DNIA
+					NIESPODZIANEK ZASZYFROWANY
+				</p>
+
+				<a href="#fabula" class="hero-cta"
+					>URUCHOM MISJ&#280; RATUNKOW&#260;</a
+				>
+
+				<div class="scroll-indicator">
+					<span>PRZEWI&#323;</span>
+					<svg width="14" height="20" viewBox="0 0 14 20" fill="none">
+						<path
+							d="M7 0v16M1 10l6 8 6-8"
+							stroke="currentColor"
+							stroke-width="1.5"
+							stroke-linecap="round"
+						/>
+					</svg>
+				</div>
+			</section>
+
+			<section id="fabula">
+				<div class="section-label">// log.zdarzenia &mdash; 09:15:00</div>
+				<h2 class="section-title">
+					Robot <span>ROBO-5</span><br />nie odpowiada!
+				</h2>
+				<p class="prose">
+					Dzi&#347; rano szkolny robot ROBO-5 &mdash; kt&oacute;ry
+					mia&#322; zaprogramowa&#263; Dzie&#324; Niespodzianek na
+					zako&#324;czenie roku &mdash; zawiesi&#322; si&#281; tu&#380;
+					po starcie. Ca&#322;y plan (gry, nagrody, niespodzianki)
+					zosta&#322; zaszyfrowany tajnym kodem.<br /><br />
+					Na szcz&#281;&#347;cie robot zostawi&#322; awaryjny
+					protok&oacute;&#322; naprawy. To seria zagadek
+					matematycznych z ca&#322;ego roku, rozrzuconych po szkole.
+					Tylko klasa, kt&oacute;ra rozwi&#261;&#380;e je wszystkie,
+					odzyska kod g&#322;&oacute;wny i obudzi ROBO-5.
+				</p>
+
+				<div class="story-grid">
+					<div class="story-card c1">
+						<div class="card-icon">&#129302;</div>
+						<div class="card-title">SYTUACJA</div>
+						<div class="card-text">
+							Plan ROBO-5 zaszyfrowany. Bateria robota
+							s&#322;abnie z ka&#380;d&#261; minut&#261; &mdash;
+							trzeba dzia&#322;a&#263; szybko!
+						</div>
+					</div>
+					<div class="story-card c2">
+						<div class="card-icon">&#129518;</div>
+						<div class="card-title">NARZ&#280;DZIA</div>
+						<div class="card-text">
+							Liczby, u&#322;amki, dzia&#322;ania, figury i miary
+							&mdash; wszystko, czego nauczyli&#347;cie si&#281;
+							w tym roku, b&#281;dzie potrzebne.
+						</div>
+					</div>
+					<div class="story-card c3">
+						<div class="card-icon">&#128205;</div>
+						<div class="card-title">FRAGMENTY</div>
+						<div class="card-text">
+							Kod g&#322;&oacute;wny jest podzielony na cz&#281;&#347;ci
+							schowane w r&oacute;&#380;nych miejscach szko&#322;y.
+							Ka&#380;dy kod QR to kolejny fragment.
+						</div>
+					</div>
+					<div class="story-card c4">
+						<div class="card-icon">&#9889;</div>
+						<div class="card-title">STAWKA</div>
+						<div class="card-text">
+							Bez kodu ROBO-5 nie obudzi si&#281; &mdash; a
+							Dzie&#324; Niespodzianek si&#281; nie odb&#281;dzie.
+							Wasza klasa trzyma w r&#281;kach ca&#322;y plan!
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<div class="divider"></div>
+
+			<section>
+				<div class="section-label">
+					protok&oacute;&#322;.naprawy &mdash; sekwencja
+				</div>
+				<h2 class="section-title">Co was <span>czeka</span></h2>
+
+				<div class="timeline">
+					<div class="tl-item">
+						<div class="tl-dot-col">
+							<div class="tl-dot">01</div>
+							<div class="tl-line"></div>
+						</div>
+						<div class="tl-content">
+							<div class="tl-title">SKANUJ KOD QR</div>
+							<div class="tl-desc">
+								W ka&#380;dym miejscu czeka ukryty kod QR.
+								Zeskanujcie go telefonem, by otworzy&#263;
+								kolejn&#261; zagadk&#281; matematyczn&#261;.
+							</div>
+						</div>
+					</div>
+					<div class="tl-item">
+						<div class="tl-dot-col">
+							<div class="tl-dot">02</div>
+							<div class="tl-line"></div>
+						</div>
+						<div class="tl-content">
+							<div class="tl-title">ROZWI&#260;&#379; ZAGADK&#280;</div>
+							<div class="tl-desc">
+								Ka&#380;de zadanie sprawdza to, czego
+								nauczyli&#347;cie si&#281; w tym roku &mdash;
+								liczby, u&#322;amki, geometri&#281;,
+								dzia&#322;ania. Dobra odpowied&#378; ods&#322;ania
+								fragment kodu.
+							</div>
+						</div>
+					</div>
+					<div class="tl-item">
+						<div class="tl-dot-col">
+							<div class="tl-dot">03</div>
+							<div class="tl-line"></div>
+						</div>
+						<div class="tl-content">
+							<div class="tl-title">
+								ODCZYTAJ WSKAZ&Oacute;WK&#280;
+							</div>
+							<div class="tl-desc">
+								Fragment kodu wskazuje, gdzie szuka&#263;
+								nast&#281;pnego miejsca. Zbierzcie wszystkie
+								fragmenty, by z&#322;o&#380;y&#263; kod
+								g&#322;&oacute;wny.
+							</div>
+						</div>
+					</div>
+					<div class="tl-item">
+						<div class="tl-dot-col">
+							<div class="tl-dot">04</div>
+							<div class="tl-line"></div>
+						</div>
+						<div class="tl-content">
+							<div class="tl-title">OBUD&#379; ROBO-5</div>
+							<div class="tl-desc">
+								Gdy zbierzecie wszystkie fragmenty &mdash;
+								wpiszcie pe&#322;ny kod i obud&#378;cie
+								ROBO-5!
+							</div>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<div class="divider"></div>
+
+			<section id="zagadka">
+				<div class="section-label">
+					// terminal.zagadka &mdash; poziom 0 / start
+				</div>
+				<h2 class="section-title">
+					Zagadka <span>startowa</span>
+				</h2>
+				<p class="prose" style="margin-bottom: 0.5rem">
+					Zanim wyruszycie na poszukiwania &mdash; ROBO-5 zostawi&#322;
+					pierwsz&#261; zagadk&#281; prosto tutaj, na tym ekranie.
+					Rozwi&#261;&#380;cie j&#261;, by dosta&#263; has&#322;o
+					startowe i ruszy&#263; w teren.
+				</p>
+
+				<div class="puzzle-wrapper">
+					<div class="terminal-header">
+						<div class="t-dot r"></div>
+						<div class="t-dot y"></div>
+						<div class="t-dot g"></div>
+						<span class="terminal-title"
+							>ROBO-5 :: modu&#322; startowy ::
+							zagadka_0.exe :: tajemnicza liczba</span
+						>
+					</div>
+
+					<div class="puzzle-intro">
+						<p class="prompt">
+							Wykryto zaszyfrowan&#261; liczb&#281;. ROBO-5
+							zostawi&#322; sze&#347;&#263; wskaz&oacute;wek.
+						</p>
+						<p class="prompt">
+							Znajd&#378;cie liczb&#281;, kt&oacute;ra
+							spe&#322;nia je <strong>WSZYSTKIE</strong> naraz.
+						</p>
+						<p class="prompt">
+							Ta liczba to wasz pierwszy fragment kodu.
+						</p>
+					</div>
+
+					<div class="math-block">
+						<div
+							style="
+								margin-bottom: 1rem;
+								font-size: 0.7em;
+								color: var(--text-dim);
+							"
+						>
+							// SZUKANA LICZBA X &mdash; sprawd&#378; ka&#380;d&#261;
+							wskaz&oacute;wk&#281;
+						</div>
+
+						<div style="line-height: 2.1">
+							<div>
+								<span style="color: var(--cyan)">01</span>
+								&nbsp;X jest liczb&#261; dwucyfrow&#261; (10&ndash;99)
+							</div>
+							<div>
+								<span style="color: var(--cyan)">02</span>
+								&nbsp;Suma cyfr liczby X wynosi
+								<span style="color: var(--gold)">9</span>
+							</div>
+							<div>
+								<span style="color: var(--cyan)">03</span>
+								&nbsp;X jest podzielna przez
+								<span style="color: var(--gold)">5</span>
+							</div>
+							<div>
+								<span style="color: var(--cyan)">04</span>
+								&nbsp;X jest podzielna przez
+								<span style="color: var(--gold)">3</span>
+							</div>
+							<div>
+								<span style="color: var(--cyan)">05</span>
+								&nbsp;X jest liczb&#261;
+								<span style="color: var(--gold)">nieparzyst&#261;</span>
+							</div>
+							<div>
+								<span style="color: var(--cyan)">06</span>
+								&nbsp;Cyfra jedno&#347;ci jest
+								<span style="color: var(--gold)">wi&#281;ksza</span>
+								od cyfry dziesi&#261;tek
+							</div>
+						</div>
+
+						<div
+							style="
+								margin-top: 1rem;
+								font-size: 0.72em;
+								color: var(--text-dim);
+							"
+						>
+							// Podpowied&#378;: sprawdzaj wskaz&oacute;wki po
+							kolei &mdash; ka&#380;da kolejna zaw&#281;&#380;a
+							list&#281; kandydat&oacute;w
+						</div>
+					</div>
+
+					<button class="hint-toggle" onclick="toggleHint()">
+						<span id="hint-arrow">&#9654;</span> POKA&#379;
+						WSKAZ&Oacute;WK&#280; KROK PO KROKU
+					</button>
+
+					<!-- WSKAZÓWKA — tylko metodologia, bez gotowej odpowiedzi -->
+					<div class="hint-box" id="hint-box">
+						<div style="color: var(--cyan); margin-bottom: 0.6em">
+							// KROK 1 &mdash; Wypisz kandydat&oacute;w:
+						</div>
+						<div
+							style="
+								color: var(--text-dim);
+								line-height: 1.75;
+								margin-bottom: 0.9em;
+							"
+						>
+							Wypisz wszystkie liczby dwucyfrowe, kt&oacute;rych
+							suma cyfr to 9 (np. 18, 27, 36&#8230; sprawd&#378;,
+							czy ni czego nie pomin&#261;&#322;a&#347;/pomin&#261;&#322;e&#347;
+							&mdash; takich liczb jest dziewi&#281;&#263;).
+						</div>
+
+						<div style="color: var(--cyan); margin-bottom: 0.5em">
+							// KROK 2 &mdash; Zaw&#281;&#380; do podzielnych
+							przez 5:
+						</div>
+						<div
+							style="
+								color: var(--text-dim);
+								line-height: 1.75;
+								margin-bottom: 0.9em;
+							"
+						>
+							Liczba podzielna przez 5 musi ko&#324;czy&#263;
+							si&#281; na 0 lub 5. Z poprzedniej listy zostan&#261;
+							tylko dwie liczby.
+						</div>
+
+						<div style="color: var(--cyan); margin-bottom: 0.5em">
+							// KROK 3 &mdash; Sprawd&#378; podzielno&#347;&#263;
+							przez 3:
+						</div>
+						<div
+							style="
+								color: var(--text-dim);
+								line-height: 1.75;
+								margin-bottom: 0.9em;
+							"
+						>
+							Przypomnienie: liczba jest podzielna przez 3,
+							je&#347;li suma jej cyfr jest podzielna przez 3.
+							Tutaj suma cyfr to 9 &mdash; czyli obie liczby
+							z poprzedniego kroku ju&#380; to spe&#322;niaj&#261;.
+						</div>
+
+						<div style="color: var(--cyan); margin-bottom: 0.5em">
+							// KROK 4 &mdash; Odrzu&#263; liczb&#281; parzyst&#261;:
+						</div>
+						<div
+							style="
+								color: var(--text-dim);
+								line-height: 1.75;
+								margin-bottom: 0.9em;
+							"
+						>
+							Szukana liczba jest nieparzysta. Z dw&oacute;ch
+							pozosta&#322;ych kandydat&oacute;w odrzu&#263; ten,
+							kt&oacute;ry jest parzysty.
+						</div>
+
+						<div style="color: var(--cyan); margin-bottom: 0.5em">
+							// KROK 5 &mdash; Sprawd&#378; ostatni&#261;
+							wskaz&oacute;wk&#281;:
+						</div>
+						<div style="color: var(--text-dim); line-height: 1.75">
+							Cyfra jedno&#347;ci wi&#281;ksza od cyfry
+							dziesi&#261;tek &mdash; to potwierdzi, czy zosta&#322;a
+							ci jedna w&#322;a&#347;ciwa liczba.
+						</div>
+					</div>
+
+					<div class="answer-row">
+						<span class="answer-label">X =</span>
+						<input
+							class="answer-input"
+							id="answer"
+							type="number"
+							placeholder="___"
+							autocomplete="off"
+							onkeydown="
+								if (event.key === 'Enter') checkAnswer();
+							"
+						/>
+						<button class="answer-btn" onclick="checkAnswer()">
+							WERYFIKUJ &rarr;
+						</button>
+					</div>
+
+					<div class="feedback" id="feedback"></div>
+
+					<div class="password-reveal" id="pw-reveal">
+						<div class="pw-label">
+							// fragment kodu :: poziom 0 ::
+						</div>
+						<div class="pw-code">DELTA&ndash;2</div>
+						<div class="pw-next">
+							<span class="arrow">&#9654;</span> Zapami&#281;tajcie
+							ten fragment.<br />
+							<!-- Wpisz tutaj prawdziwą lokalizację pierwszego kodu QR w Twojej szkole -->
+							<span class="arrow">&#9654;</span> Znajd&#378;cie
+							pierwszy kod QR &mdash; zapytajcie nauczyciela, w
+							kt&oacute;rej sali si&#281; chowa!<br />
+							<span class="arrow">&#9654;</span> Zeskanujcie go,
+							by przej&#347;&#263; do kolejnej zagadki.
+						</div>
+					</div>
+				</div>
+
+				<div
+					id="wiedza-explainer"
+					style="
+						display: none;
+						margin-top: 2.5rem;
+						animation: fade-in 0.6s ease;
+					"
+				>
+					<div class="section-label" style="margin-top: 0">
+						// baza.wiedzy &mdash; odblokowano po rozwi&#261;zaniu
+					</div>
+					<h3
+						style="
+							font-family: var(--mono);
+							font-size: clamp(1.1rem, 3vw, 1.6rem);
+							color: #fff;
+							margin-bottom: 1.2rem;
+							line-height: 1.3;
+						"
+					>
+						Jak rozwi&#261;zywa&#263; takie zagadki?<br />Powt&oacute;rka
+						z
+						<span style="color: var(--violet)">podzielno&#347;ci</span>
+					</h3>
+
+					<div
+						style="
+							background: rgba(13, 22, 40, 0.8);
+							border: 1px solid rgba(0, 212, 255, 0.15);
+							border-left: 3px solid var(--cyan);
+							border-radius: 0 6px 6px 0;
+							padding: 1.3rem 1.5rem;
+							margin-bottom: 1.2rem;
+						"
+					>
+						<div
+							style="
+								font-family: var(--mono);
+								font-size: 0.62rem;
+								letter-spacing: 0.25em;
+								color: var(--cyan);
+								margin-bottom: 0.6rem;
+							"
+						>
+							// DEFINICJA
+						</div>
+						<p
+							style="
+								font-size: 0.9rem;
+								line-height: 1.8;
+								color: var(--text);
+							"
+						>
+							<strong style="color: var(--cyan)"
+								>Cecha podzielno&#347;ci</strong
+							>
+							to prosty trik, kt&oacute;ry pozwala sprawdzi&#263;,
+							czy liczba dzieli si&#281; przez inn&#261;
+							&mdash; bez wykonywania samego dzielenia! W
+							zagadkach typu &bdquo;tajemnicza liczba&rdquo;
+							cechy podzielno&#347;ci s&#261; najszybsz&#261;
+							bro&#324;.
+						</p>
+					</div>
+
+					<div
+						style="
+							font-family: var(--mono);
+							font-size: 0.62rem;
+							letter-spacing: 0.25em;
+							color: var(--gold);
+							margin-bottom: 0.9rem;
+							text-transform: uppercase;
+						"
+					>
+						// Najwa&#380;niejsze cechy podzielno&#347;ci
+					</div>
+					<div
+						style="
+							display: grid;
+							grid-template-columns: repeat(
+								auto-fit,
+								minmax(200px, 1fr)
+							);
+							gap: 1rem;
+							margin-bottom: 1.5rem;
+						"
+					>
+						<div
+							style="
+								background: rgba(13, 22, 40, 0.7);
+								border: 1px solid rgba(255, 255, 255, 0.07);
+								border-radius: 6px;
+								padding: 1.1rem;
+							"
+						>
+							<div
+								style="
+									font-family: var(--mono);
+									font-size: 0.6rem;
+									color: var(--text-dim);
+									margin-bottom: 0.4rem;
+								"
+							>
+								PRZEZ 2
+							</div>
+							<div
+								style="
+									font-family: var(--mono);
+									font-size: 0.8rem;
+									color: var(--cyan);
+									margin-bottom: 0.4rem;
+								"
+							>
+								Liczba parzysta
+							</div>
+							<div
+								style="
+									font-size: 0.82rem;
+									color: var(--text-dim);
+									line-height: 1.65;
+								"
+							>
+								Ostatnia cyfra to 0, 2, 4, 6 lub 8.
+							</div>
+						</div>
+						<div
+							style="
+								background: rgba(13, 22, 40, 0.7);
+								border: 1px solid rgba(255, 255, 255, 0.07);
+								border-radius: 6px;
+								padding: 1.1rem;
+							"
+						>
+							<div
+								style="
+									font-family: var(--mono);
+									font-size: 0.6rem;
+									color: var(--text-dim);
+									margin-bottom: 0.4rem;
+								"
+							>
+								PRZEZ 3
+							</div>
+							<div
+								style="
+									font-family: var(--mono);
+									font-size: 0.8rem;
+									color: var(--cyan);
+									margin-bottom: 0.4rem;
+								"
+							>
+								Suma cyfr &#247; 3
+							</div>
+							<div
+								style="
+									font-size: 0.82rem;
+									color: var(--text-dim);
+									line-height: 1.65;
+								"
+							>
+								Dodaj wszystkie cyfry &mdash; jeśli ich suma
+								dzieli si&#281; przez 3, liczba te&#380;.
+							</div>
+						</div>
+						<div
+							style="
+								background: rgba(13, 22, 40, 0.7);
+								border: 1px solid rgba(255, 255, 255, 0.07);
+								border-radius: 6px;
+								padding: 1.1rem;
+							"
+						>
+							<div
+								style="
+									font-family: var(--mono);
+									font-size: 0.6rem;
+									color: var(--text-dim);
+									margin-bottom: 0.4rem;
+								"
+							>
+								PRZEZ 5
+							</div>
+							<div
+								style="
+									font-family: var(--mono);
+									font-size: 0.8rem;
+									color: var(--cyan);
+									margin-bottom: 0.4rem;
+								"
+							>
+								Ko&#324;c&oacute;wka 0 lub 5
+							</div>
+							<div
+								style="
+									font-size: 0.82rem;
+									color: var(--text-dim);
+									line-height: 1.65;
+								"
+							>
+								Ostatnia cyfra musi by&#263; 0 albo 5.
+							</div>
+						</div>
+						<div
+							style="
+								background: rgba(13, 22, 40, 0.7);
+								border: 1px solid rgba(255, 255, 255, 0.07);
+								border-radius: 6px;
+								padding: 1.1rem;
+							"
+						>
+							<div
+								style="
+									font-family: var(--mono);
+									font-size: 0.6rem;
+									color: var(--text-dim);
+									margin-bottom: 0.4rem;
+								"
+							>
+								PRZEZ 9
+							</div>
+							<div
+								style="
+									font-family: var(--mono);
+									font-size: 0.8rem;
+									color: var(--cyan);
+									margin-bottom: 0.4rem;
+								"
+							>
+								Suma cyfr &#247; 9
+							</div>
+							<div
+								style="
+									font-size: 0.82rem;
+									color: var(--text-dim);
+									line-height: 1.65;
+								"
+							>
+								Dzia&#322;a tak samo jak przy 3, tylko sprawdzasz
+								podzielno&#347;&#263; sumy przez 9.
+							</div>
+						</div>
+					</div>
+
+					<div
+						style="
+							background: rgba(74, 222, 128, 0.04);
+							border: 1px solid rgba(74, 222, 128, 0.2);
+							border-radius: 6px;
+							padding: 1.4rem 1.5rem;
+						"
+					>
+						<div
+							style="
+								font-family: var(--mono);
+								font-size: 0.62rem;
+								letter-spacing: 0.22em;
+								color: #4ade80;
+								margin-bottom: 0.9rem;
+							"
+						>
+							// PRZYK&#321;AD &mdash; nasza zagadka krok po kroku
+						</div>
+						<div
+							style="
+								font-size: 0.85rem;
+								line-height: 1.85;
+								color: var(--text);
+							"
+						>
+							<strong
+								style="color: #fff; font-family: var(--mono)"
+								>Liczby dwucyfrowe z sum&#261; cyfr 9:</strong
+							><br />
+							<span
+								style="
+									font-family: var(--mono);
+									color: var(--text-dim);
+								"
+							>
+								18, 27, 36, 45, 54, 63, 72, 81, 90 </span
+							><br /><br />
+							<strong
+								style="color: #fff; font-family: var(--mono)"
+								>Podzielne przez 5 (ko&#324;c&oacute;wka 0 lub
+								5):</strong
+							><br />
+							<span
+								style="
+									font-family: var(--mono);
+									color: var(--text-dim);
+								"
+							>
+								45, 90 </span
+							><br /><br />
+							<strong
+								style="color: #fff; font-family: var(--mono)"
+								>Liczba nieparzysta z tej dw&oacute;jki:</strong
+							><br />
+							<span
+								style="
+									font-family: var(--mono);
+									color: var(--text-dim);
+								"
+							>
+								90 jest parzyste &mdash; wypada. Zostaje
+								<span style="color: var(--gold)">45</span> </span
+							><br /><br />
+							<strong
+								style="color: #fff; font-family: var(--mono)"
+								>Sprawdzenie ostatniej wskaz&oacute;wki:</strong
+							><br />
+							<span
+								style="
+									font-family: var(--mono);
+									color: var(--text-dim);
+								"
+							>
+								cyfra jedno&#347;ci (5) &gt; cyfra
+								dziesi&#261;tek (4) &mdash; zgadza si&#281;
+								&#10003; </span
+							><br /><br />
+							<strong
+								style="color: #fff; font-family: var(--mono)"
+								>Wynik:</strong
+							>
+							<span
+								style="
+									font-family: var(--mono);
+									color: var(--cyan);
+									font-size: 1.05rem;
+								"
+							>
+								X =
+								<span style="color: #4ade80; font-size: 1.15rem"
+									>45</span
+								>
+							</span>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<div class="divider"></div>
+
+			<section class="qr-section">
+				<div class="section-label">// mapa.misji &mdash; lokalizacje</div>
+				<h2 class="section-title">Sekwencja <span>zagadek</span></h2>
+				<p
+					class="prose"
+					style="margin: 0 auto 0.5rem; text-align: center"
+				>
+					Ka&#380;dy kod QR prowadzi do kolejnej zagadki. Lokalizacje
+					s&#261; ukryte w szkole &mdash; szukajcie uwa&#380;nie!
+				</p>
+
+				<div class="qr-grid">
+					<div class="qr-item active">
+						<div class="qr-box">📱</div>
+						<div class="qr-label">Start<br />Ta strona</div>
+					</div>
+					<div class="qr-item locked">
+						<div class="qr-box">░░</div>
+						<div class="qr-label">QR #1<br />???</div>
+					</div>
+					<div class="qr-item locked">
+						<div class="qr-box">░░</div>
+						<div class="qr-label">QR #2<br />???</div>
+					</div>
+					<div class="qr-item locked">
+						<div class="qr-box">░░</div>
+						<div class="qr-label">QR #3<br />???</div>
+					</div>
+					<div class="qr-item locked">
+						<div class="qr-box">🔑</div>
+						<div class="qr-label">FINA&#0Ł<br />Kod g&#322;&oacute;wny</div>
+					</div>
+				</div>
+			</section>
+
+			<footer>
+				<p>
+					ROBO-5 PROTOK&Oacute;&#321; NAPRAWY //
+					<span>KLASA 5</span> // MISJA AKTYWNA
+				</p>
+				<p style="margin-top: 0.5rem; color: #2a3a50">
+					// v1.0.0 &mdash; wszystkie kody zarezerwowane dla
+					najlepszych detektyw&oacute;w
+				</p>
+			</footer>
+		</div>
+
+		<script>
+			(function () {
+				const canvas = document.getElementById("matrix-canvas");
+				const ctx = canvas.getContext("2d");
+				const chars = "0123456789+−×÷=%½¼ROBO5";
+				const size = 14;
+				let cols, drops;
+
+				function resize() {
+					canvas.width = window.innerWidth;
+					canvas.height = window.innerHeight;
+					cols = Math.floor(canvas.width / size);
+					drops = drops ? drops.slice(0, cols) : [];
+					while (drops.length < cols) drops.push(Math.random() * -50);
+				}
+
+				resize();
+				window.addEventListener("resize", resize);
+
+				function draw() {
+					ctx.fillStyle = "rgba(7,11,20,0.08)";
+					ctx.fillRect(0, 0, canvas.width, canvas.height);
+					ctx.font = size + "px Share Tech Mono, monospace";
+					for (let i = 0; i < cols; i++) {
+						const ch =
+							chars[Math.floor(Math.random() * chars.length)];
+						const x = i * size;
+						const y = drops[i] * size;
+						const g = Math.random();
+						if (g > 0.85) ctx.fillStyle = "#00D4FF";
+						else if (g > 0.65) ctx.fillStyle = "#7B2FFF";
+						else ctx.fillStyle = "#1A3A5C";
+						ctx.fillText(ch, x, y);
+						if (y > canvas.height && Math.random() > 0.975)
+							drops[i] = 0;
+						drops[i] += 0.4;
+					}
+				}
+
+				setInterval(draw, 45);
+			})();
+
+			function toggleHint() {
+				const box = document.getElementById("hint-box");
+				const arrow = document.getElementById("hint-arrow");
+				box.classList.toggle("visible");
+				arrow.textContent = box.classList.contains("visible")
+					? "\u25BC"
+					: "\u25BA";
+			}
+
+			let attempts = 0;
+
+			function checkAnswer() {
+				const val = parseFloat(document.getElementById("answer").value);
+				const fb = document.getElementById("feedback");
+				const reveal = document.getElementById("pw-reveal");
+				const explainer = document.getElementById("wiedza-explainer");
+				attempts++;
+
+				fb.className = "feedback";
+				fb.style.display = "none";
+
+				if (isNaN(val)) {
+					fb.textContent =
+						"// B\u0141\u0104D: Wprowad\u017a warto\u015b\u0107 liczbow\u0105.";
+					fb.classList.add("err");
+					return;
+				}
+
+				if (val === 45) {
+					fb.textContent =
+						"// WERYFIKACJA POZYTYWNA :: X = 45 :: WSZYSTKIE WARUNKI SPE\u0141NIONE :: FRAGMENT KODU ODBLOKOWANY // pr\u00f3ba " +
+						attempts;
+					fb.classList.add("ok");
+					reveal.classList.add("show");
+					explainer.style.display = "block";
+					setTimeout(() => {
+						reveal.scrollIntoView({
+							behavior: "smooth",
+							block: "center",
+						});
+					}, 150);
+					setTimeout(() => {
+						explainer.scrollIntoView({
+							behavior: "smooth",
+							block: "start",
+						});
+					}, 1800);
+				} else {
+					const msgs = [
+						"// SPRAWD\u017a JESZCZE RAZ :: X \u2260 " +
+							val +
+							" :: Czy ta liczba spe\u0142nia WSZYSTKIE sze\u015b\u0107 wskaz\u00f3wek?",
+						"// PR\u00d3BA " +
+							attempts +
+							" :: Podpowied\u017a: zacznij od liczb dwucyfrowych z sum\u0105 cyfr 9.",
+						"// ALERT :: " +
+							attempts +
+							" nieudane pr\u00f3by :: Skorzystaj z przycisku \u201ePoka\u017c wskaz\u00f3wk\u0119\u201d \u2014 rozpisano krok po kroku.",
+					];
+					fb.textContent =
+						msgs[Math.min(attempts - 1, msgs.length - 1)];
+					fb.classList.add("err");
+					document.getElementById("answer").value = "";
+					document.getElementById("answer").focus();
+				}
+			}
+		</script>
+	</body>
+</html>

@@ -1,0 +1,1342 @@
+<!doctype html>
+<html lang="pl">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>MATRIX-7 :: Moduł 01 — Szyfr Działań</title>
+		<link
+			href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Inter:wght@300;400;600;700&display=swap"
+			rel="stylesheet"
+		/>
+		<style>
+			*,
+			*::before,
+			*::after {
+				box-sizing: border-box;
+				margin: 0;
+				padding: 0;
+			}
+
+			:root {
+				--bg: #070b14;
+				--bg2: #0d1628;
+				--bg3: #0a1020;
+				--cyan: #00d4ff;
+				--violet: #7b2fff;
+				--red: #ff3366;
+				--gold: #ffd166;
+				--green: #4ade80;
+				--text: #c8d8ee;
+				--dim: #5a7090;
+				--mono: "Share Tech Mono", monospace;
+				--sans: "Inter", sans-serif;
+			}
+
+			html {
+				scroll-behavior: smooth;
+			}
+
+			body {
+				background: var(--bg);
+				color: var(--text);
+				font-family: var(--sans);
+				overflow-x: hidden;
+				min-height: 100vh;
+			}
+
+			/* ── CANVAS ── */
+			#matrix-canvas {
+				position: fixed;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+				z-index: 0;
+				opacity: 0.13;
+				pointer-events: none;
+			}
+
+			.layer {
+				position: relative;
+				z-index: 1;
+			}
+
+			/* ── STATUS BAR ── */
+			.statusbar {
+				position: sticky;
+				top: 0;
+				z-index: 100;
+				background: rgba(7, 11, 20, 0.94);
+				backdrop-filter: blur(12px);
+				border-bottom: 1px solid rgba(0, 212, 255, 0.1);
+				padding: 0.55rem clamp(1rem, 4vw, 3rem);
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				flex-wrap: wrap;
+				gap: 0.5rem;
+			}
+
+			.sb-left {
+				display: flex;
+				align-items: center;
+				gap: 0.75rem;
+				font-family: var(--mono);
+				font-size: 0.65rem;
+				color: var(--dim);
+			}
+
+			.sb-left .sep {
+				color: rgba(255, 255, 255, 0.08);
+			}
+			.sb-left strong {
+				color: #fff;
+			}
+
+			.blink-dot {
+				width: 7px;
+				height: 7px;
+				border-radius: 50%;
+				background: var(--red);
+				animation: blink 1.2s ease-in-out infinite;
+				flex-shrink: 0;
+			}
+
+			@keyframes blink {
+				0%,
+				100% {
+					opacity: 1;
+				}
+				50% {
+					opacity: 0.15;
+				}
+			}
+
+			.prog-wrap {
+				display: flex;
+				align-items: center;
+				gap: 0.65rem;
+				font-family: var(--mono);
+				font-size: 0.62rem;
+				color: var(--dim);
+			}
+
+			.prog-track {
+				width: 100px;
+				height: 3px;
+				background: rgba(255, 255, 255, 0.05);
+				border-radius: 99px;
+				overflow: hidden;
+			}
+
+			.prog-fill {
+				height: 100%;
+				background: linear-gradient(90deg, var(--cyan), var(--violet));
+				border-radius: 99px;
+				width: 25%;
+				transition: width 0.8s ease;
+			}
+
+			/* ── HERO ── */
+			.hero {
+				min-height: 52vh;
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				justify-content: center;
+				text-align: center;
+				padding: 3.5rem 1.5rem 2.5rem;
+				gap: 1.1rem;
+			}
+
+			.breadcrumb {
+				font-family: var(--mono);
+				font-size: 0.62rem;
+				letter-spacing: 0.2em;
+				color: var(--dim);
+				display: flex;
+				align-items: center;
+				gap: 0.45rem;
+				flex-wrap: wrap;
+				justify-content: center;
+			}
+
+			.breadcrumb .bc-sep {
+				color: var(--cyan);
+			}
+			.breadcrumb .bc-done {
+				color: var(--green);
+			}
+			.breadcrumb .bc-now {
+				color: var(--cyan);
+			}
+
+			.alert-badge {
+				display: inline-flex;
+				align-items: center;
+				gap: 0.5rem;
+				border: 1px solid rgba(255, 51, 102, 0.45);
+				padding: 0.32em 0.9em;
+				border-radius: 2px;
+				font-family: var(--mono);
+				font-size: 0.65rem;
+				letter-spacing: 0.22em;
+				color: var(--red);
+				animation: alert-glow 2s ease-in-out infinite;
+			}
+
+			@keyframes alert-glow {
+				0%,
+				100% {
+					box-shadow: 0 0 6px rgba(255, 51, 102, 0.1);
+				}
+				50% {
+					box-shadow: 0 0 20px rgba(255, 51, 102, 0.35);
+				}
+			}
+
+			.hero-title {
+				font-family: var(--mono);
+				font-size: clamp(1.8rem, 6vw, 3.8rem);
+				line-height: 1.1;
+				color: #fff;
+			}
+
+			.hero-title .c {
+				color: var(--cyan);
+				text-shadow: 0 0 26px var(--cyan);
+			}
+			.hero-title .v {
+				color: var(--violet);
+				text-shadow: 0 0 26px var(--violet);
+			}
+
+			.hero-log {
+				font-family: var(--mono);
+				font-size: clamp(0.7rem, 1.8vw, 0.85rem);
+				color: var(--dim);
+				line-height: 1.75;
+				max-width: 480px;
+			}
+
+			.hero-log .p::before {
+				content: "// ";
+				color: var(--cyan);
+			}
+
+			/* ── SECTIONS ── */
+			.section {
+				padding: clamp(2rem, 5vw, 4rem) clamp(1.5rem, 5vw, 3.5rem);
+				max-width: 820px;
+				margin: 0 auto;
+			}
+
+			.section-label {
+				font-family: var(--mono);
+				font-size: 0.6rem;
+				letter-spacing: 0.32em;
+				color: var(--cyan);
+				text-transform: uppercase;
+				margin-bottom: 0.9rem;
+			}
+
+			.section-title {
+				font-family: var(--mono);
+				font-size: clamp(1.15rem, 3.2vw, 1.8rem);
+				color: #fff;
+				margin-bottom: 1.1rem;
+				line-height: 1.25;
+			}
+
+			.section-title span {
+				color: var(--violet);
+			}
+
+			.prose {
+				font-size: clamp(0.85rem, 1.9vw, 0.97rem);
+				line-height: 1.85;
+				color: var(--text);
+				font-weight: 300;
+			}
+
+			.divider {
+				height: 1px;
+				background: linear-gradient(
+					90deg,
+					transparent,
+					rgba(0, 212, 255, 0.18),
+					transparent
+				);
+				max-width: 820px;
+				margin: 0 auto;
+			}
+
+			/* ── NARRATIVE ALERT ── */
+			.narrative-alert {
+				background: rgba(255, 51, 102, 0.05);
+				border: 1px solid rgba(255, 51, 102, 0.22);
+				border-left: 3px solid var(--red);
+				border-radius: 0 5px 5px 0;
+				padding: 1.1rem 1.4rem;
+				font-family: var(--mono);
+				font-size: 0.8rem;
+				color: var(--text);
+				line-height: 1.75;
+				margin-bottom: 1.8rem;
+			}
+
+			.narrative-alert .nal {
+				font-size: 0.62rem;
+				letter-spacing: 0.18em;
+				color: var(--red);
+				margin-bottom: 0.45rem;
+			}
+
+			/* ── THEORY TOGGLE ── */
+			.theory-toggle {
+				display: inline-flex;
+				align-items: center;
+				gap: 0.55rem;
+				background: rgba(123, 47, 255, 0.07);
+				border: 1px solid rgba(123, 47, 255, 0.28);
+				color: var(--violet);
+				font-family: var(--mono);
+				font-size: 0.72rem;
+				letter-spacing: 0.1em;
+				padding: 0.55em 1.3em;
+				border-radius: 4px;
+				cursor: pointer;
+				transition:
+					background 0.2s,
+					box-shadow 0.2s;
+				margin-bottom: 1.1rem;
+			}
+
+			.theory-toggle:hover {
+				background: rgba(123, 47, 255, 0.14);
+				box-shadow: 0 0 18px rgba(123, 47, 255, 0.18);
+			}
+
+			.theory-box {
+				background: rgba(8, 6, 20, 0.85);
+				border: 1px solid rgba(123, 47, 255, 0.18);
+				border-radius: 6px;
+				padding: 1.3rem 1.4rem;
+				font-family: var(--mono);
+				font-size: 0.78rem;
+				line-height: 1.9;
+				color: var(--text);
+				margin-bottom: 1.4rem;
+				display: none;
+				animation: fadein 0.3s ease;
+			}
+
+			.theory-box.visible {
+				display: block;
+			}
+
+			@keyframes fadein {
+				from {
+					opacity: 0;
+					transform: translateY(4px);
+				}
+				to {
+					opacity: 1;
+					transform: translateY(0);
+				}
+			}
+
+			.theory-box .tv {
+				color: var(--violet);
+			}
+			.theory-box .tc {
+				color: var(--cyan);
+			}
+			.theory-box .tg {
+				color: var(--gold);
+			}
+
+			/* ── PUZZLE TERMINAL ── */
+			.puzzle-wrap {
+				background: rgba(7, 11, 20, 0.98);
+				border: 1px solid rgba(0, 212, 255, 0.18);
+				border-radius: 8px;
+				padding: clamp(1.2rem, 3.5vw, 2rem);
+				margin-top: 1.2rem;
+				box-shadow: 0 0 60px rgba(0, 212, 255, 0.05);
+				position: relative;
+				overflow: hidden;
+			}
+
+			.puzzle-wrap::before {
+				content: "";
+				position: absolute;
+				top: 0;
+				left: -200%;
+				right: -200%;
+				height: 2px;
+				background: linear-gradient(
+					90deg,
+					transparent 25%,
+					var(--cyan) 50%,
+					transparent 75%
+				);
+				animation: scanline 4.5s linear infinite;
+			}
+
+			@keyframes scanline {
+				from {
+					left: -200%;
+				}
+				to {
+					left: 200%;
+				}
+			}
+
+			.t-header {
+				display: flex;
+				align-items: center;
+				gap: 0.55rem;
+				padding-bottom: 0.85rem;
+				border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+				margin-bottom: 1.2rem;
+			}
+
+			.tdot {
+				width: 10px;
+				height: 10px;
+				border-radius: 50%;
+			}
+			.tdot.r {
+				background: var(--red);
+			}
+			.tdot.y {
+				background: var(--gold);
+			}
+			.tdot.g {
+				background: var(--green);
+			}
+
+			.t-title {
+				font-family: var(--mono);
+				font-size: 0.62rem;
+				color: var(--dim);
+				margin-left: 0.35rem;
+				letter-spacing: 0.08em;
+			}
+
+			.t-prompt {
+				font-family: var(--mono);
+				font-size: 0.78rem;
+				color: var(--green);
+				line-height: 1.75;
+				margin-bottom: 1.2rem;
+			}
+
+			.t-prompt .p::before {
+				content: "> ";
+				color: var(--cyan);
+			}
+
+			/* ── WYRAŻENIA DO OBLICZENIA ── */
+			.expr-grid {
+				display: grid;
+				grid-template-columns: 1fr 1fr;
+				gap: 0.9rem;
+				margin: 1.2rem 0;
+			}
+
+			.expr-card {
+				background: rgba(0, 0, 0, 0.35);
+				border: 1px solid rgba(0, 212, 255, 0.15);
+				border-radius: 6px;
+				padding: 1rem 0.8rem;
+				text-align: center;
+			}
+
+			.expr-label {
+				font-family: var(--mono);
+				font-size: 0.58rem;
+				letter-spacing: 0.14em;
+				color: var(--dim);
+				margin-bottom: 0.55rem;
+			}
+
+			.expr-text {
+				font-family: var(--mono);
+				font-size: clamp(1rem, 3vw, 1.2rem);
+				color: #fff;
+				letter-spacing: 0.02em;
+			}
+
+			@media (max-width: 480px) {
+				.expr-grid {
+					grid-template-columns: 1fr;
+				}
+			}
+
+			/* ── MATRIX INPUTS ── */
+			.input-matrix-area {
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				margin: 1.4rem 0;
+			}
+
+			.inp-brk {
+				font-family: var(--mono);
+				font-size: 3rem;
+				line-height: 1;
+				font-weight: 100;
+				color: var(--violet);
+				padding: 0 0.05em;
+				user-select: none;
+			}
+
+			.inp-cells {
+				display: grid;
+				grid-template-columns: 1fr 1fr;
+				gap: 0.6rem;
+				padding: 0 0.3rem;
+			}
+
+			.inp-wrap {
+				position: relative;
+			}
+
+			.inp-wrap input {
+				width: 68px;
+				height: 68px;
+				background: rgba(13, 22, 40, 0.9);
+				border: 1px solid rgba(123, 47, 255, 0.3);
+				border-radius: 6px;
+				text-align: center;
+				font-family: var(--mono);
+				font-size: 1.3rem;
+				color: var(--violet);
+				font-weight: 600;
+				outline: none;
+				transition:
+					border-color 0.2s,
+					box-shadow 0.2s;
+				-moz-appearance: textfield;
+			}
+
+			.inp-wrap input::-webkit-outer-spin-button,
+			.inp-wrap input::-webkit-inner-spin-button {
+				-webkit-appearance: none;
+			}
+
+			.inp-wrap input:focus {
+				border-color: var(--violet);
+				box-shadow:
+					0 0 0 2px rgba(123, 47, 255, 0.18),
+					0 0 14px rgba(123, 47, 255, 0.25);
+				background: rgba(20, 12, 40, 0.95);
+			}
+
+			.inp-wrap input.correct {
+				border-color: var(--green);
+				color: var(--green);
+				box-shadow: 0 0 0 2px rgba(74, 222, 128, 0.15);
+			}
+
+			.inp-wrap input.wrong {
+				border-color: var(--red);
+				color: var(--red);
+				animation: shake 0.35s ease;
+			}
+
+			@keyframes shake {
+				0%,
+				100% {
+					transform: translateX(0);
+				}
+				25% {
+					transform: translateX(-4px);
+				}
+				75% {
+					transform: translateX(4px);
+				}
+			}
+
+			.inp-sub {
+				position: absolute;
+				bottom: 4px;
+				right: 6px;
+				font-family: var(--mono);
+				font-size: 0.55rem;
+				color: rgba(123, 47, 255, 0.4);
+				pointer-events: none;
+			}
+
+			@media (max-width: 380px) {
+				.inp-wrap input {
+					width: 56px;
+					height: 56px;
+					font-size: 1.1rem;
+				}
+			}
+
+			/* ── HINT ── */
+			.hint-btn {
+				display: inline-flex;
+				align-items: center;
+				gap: 0.5rem;
+				background: none;
+				border: 1px solid rgba(0, 212, 255, 0.2);
+				color: var(--dim);
+				font-family: var(--mono);
+				font-size: 0.7rem;
+				letter-spacing: 0.1em;
+				padding: 0.5em 1.1em;
+				border-radius: 4px;
+				cursor: pointer;
+				transition: all 0.2s;
+				margin-bottom: 0.9rem;
+			}
+
+			.hint-btn:hover {
+				border-color: var(--cyan);
+				color: var(--cyan);
+			}
+
+			.hint-reveal {
+				background: rgba(0, 212, 255, 0.04);
+				border: 1px solid rgba(0, 212, 255, 0.12);
+				border-radius: 5px;
+				padding: 0.95rem 1.1rem;
+				font-family: var(--mono);
+				font-size: 0.74rem;
+				color: var(--dim);
+				line-height: 1.85;
+				margin-bottom: 1.1rem;
+				display: none;
+				animation: fadein 0.3s ease;
+			}
+
+			.hint-reveal.show {
+				display: block;
+			}
+			.hint-reveal .hc {
+				color: var(--cyan);
+			}
+			.hint-reveal .hg {
+				color: var(--gold);
+			}
+
+			/* ── VERIFY BTN ── */
+			.verify-btn {
+				width: 100%;
+				background: linear-gradient(
+					135deg,
+					var(--violet) 0%,
+					#5a1fcc 100%
+				);
+				border: none;
+				border-radius: 6px;
+				padding: 0.85em 2em;
+				font-family: var(--mono);
+				font-size: 0.82rem;
+				letter-spacing: 0.18em;
+				color: #fff;
+				font-weight: 700;
+				cursor: pointer;
+				transition:
+					transform 0.15s,
+					box-shadow 0.2s;
+				text-transform: uppercase;
+				margin-top: 0.5rem;
+			}
+
+			.verify-btn:hover {
+				transform: translateY(-1px);
+				box-shadow: 0 6px 24px rgba(123, 47, 255, 0.4);
+			}
+
+			.verify-btn:disabled {
+				opacity: 0.4;
+				cursor: default;
+				transform: none;
+			}
+
+			/* ── FEEDBACK ── */
+			.feedback {
+				margin-top: 0.9rem;
+				font-family: var(--mono);
+				font-size: 0.78rem;
+				padding: 0.7em 1.05em;
+				border-radius: 4px;
+				display: none;
+				animation: fadein 0.3s ease;
+			}
+
+			.feedback.ok {
+				display: block;
+				background: rgba(74, 222, 128, 0.07);
+				border: 1px solid rgba(74, 222, 128, 0.28);
+				color: var(--green);
+			}
+
+			.feedback.err {
+				display: block;
+				background: rgba(255, 51, 102, 0.07);
+				border: 1px solid rgba(255, 51, 102, 0.28);
+				color: var(--red);
+			}
+
+			/* ── UNLOCK ── */
+			.unlock-panel {
+				margin-top: 1.6rem;
+				background: rgba(0, 212, 255, 0.03);
+				border: 1px solid rgba(0, 212, 255, 0.22);
+				border-radius: 8px;
+				padding: 1.7rem;
+				text-align: center;
+				display: none;
+				animation: fadein 0.6s ease;
+			}
+
+			.unlock-panel.show {
+				display: block;
+			}
+
+			.unlock-icon {
+				font-size: 2.4rem;
+				margin-bottom: 0.65rem;
+				animation: float 2.5s ease-in-out infinite;
+			}
+
+			@keyframes float {
+				0%,
+				100% {
+					transform: translateY(0);
+				}
+				50% {
+					transform: translateY(-6px);
+				}
+			}
+
+			.unlock-label {
+				font-family: var(--mono);
+				font-size: 0.58rem;
+				letter-spacing: 0.42em;
+				color: var(--dim);
+				margin-bottom: 0.55rem;
+			}
+
+			.unlock-code {
+				font-family: var(--mono);
+				font-size: clamp(1.4rem, 5vw, 2.3rem);
+				color: var(--cyan);
+				letter-spacing: 0.35em;
+				text-shadow: 0 0 28px var(--cyan);
+				font-weight: 700;
+				margin-bottom: 0.4rem;
+			}
+
+			.unlock-frags {
+				display: flex;
+				justify-content: center;
+				gap: 0.45rem;
+				flex-wrap: wrap;
+				margin: 1rem 0;
+			}
+
+			.uf {
+				font-family: var(--mono);
+				font-size: 0.75rem;
+				padding: 0.28em 0.65em;
+				border-radius: 3px;
+				border: 1px solid rgba(255, 255, 255, 0.06);
+				color: var(--dim);
+			}
+
+			.uf.done {
+				background: rgba(0, 212, 255, 0.08);
+				border-color: rgba(0, 212, 255, 0.32);
+				color: var(--cyan);
+			}
+
+			.uf.just {
+				background: rgba(74, 222, 128, 0.08);
+				border-color: rgba(74, 222, 128, 0.35);
+				color: var(--green);
+				animation: pulse-g 2s infinite;
+			}
+
+			@keyframes pulse-g {
+				0%,
+				100% {
+					box-shadow: 0 0 4px rgba(74, 222, 128, 0.15);
+				}
+				50% {
+					box-shadow: 0 0 14px rgba(74, 222, 128, 0.45);
+				}
+			}
+
+			.unlock-next {
+				font-family: var(--mono);
+				font-size: 0.76rem;
+				color: var(--dim);
+				line-height: 1.85;
+				margin-top: 0.9rem;
+			}
+
+			.unlock-next .arrow {
+				color: var(--gold);
+			}
+			.unlock-next .loc {
+				color: #fff;
+			}
+
+			/* ── FRAGMENTS SECTION ── */
+			.frags-row {
+				display: flex;
+				justify-content: center;
+				gap: 0.5rem;
+				flex-wrap: wrap;
+				font-family: var(--mono);
+				font-size: 0.88rem;
+				margin-top: 1.4rem;
+			}
+
+			.frag-chip {
+				padding: 0.42em 0.9em;
+				border-radius: 4px;
+				border: 1px solid rgba(255, 255, 255, 0.07);
+				color: var(--dim);
+				white-space: nowrap;
+			}
+
+			.frag-chip.collected {
+				background: rgba(0, 212, 255, 0.08);
+				border-color: rgba(0, 212, 255, 0.32);
+				color: var(--cyan);
+			}
+
+			.frag-chip.plus {
+				border: none;
+				color: var(--dim);
+				display: flex;
+				align-items: center;
+			}
+
+			footer {
+				text-align: center;
+				padding: 2rem 1.5rem;
+				font-family: var(--mono);
+				font-size: 0.6rem;
+				color: var(--dim);
+				letter-spacing: 0.15em;
+				border-top: 1px solid rgba(255, 255, 255, 0.03);
+			}
+
+			footer span {
+				color: var(--cyan);
+			}
+		</style>
+	</head>
+	<body>
+		<canvas id="matrix-canvas"></canvas>
+
+		<div class="layer">
+			<!-- ── STATUS BAR ── -->
+			<div class="statusbar">
+				<div class="sb-left">
+					<div class="blink-dot"></div>
+					<span>MATRIX-7</span>
+					<span class="sep">|</span>
+					<span>MODUŁ&nbsp;<strong>01</strong>&nbsp;/&nbsp;05</span>
+					<span class="sep">|</span>
+					<span style="color: var(--red)">SZYFROWANIE AKTYWNE</span>
+				</div>
+				<div class="prog-wrap">
+					<span>POSTĘP</span>
+					<div class="prog-track">
+						<div class="prog-fill" id="prog-fill"></div>
+					</div>
+					<span id="prog-label">0%</span>
+				</div>
+			</div>
+
+			<!-- ── HERO ── -->
+			<section class="hero">
+				<div class="breadcrumb">
+					<span>START</span>
+					<span class="bc-sep">›</span>
+					<span class="bc-done">ZAGADKA 0 ✓</span>
+					<span class="bc-sep">›</span>
+					<span class="bc-now">MODUŁ 01 — SZYFR DZIAŁAŃ</span>
+				</div>
+
+				<div class="alert-badge">
+					⚠ ALERT :: MODUŁ SZYFRUJĄCY 01 :: WYMAGANY DOSTĘP
+				</div>
+
+				<h1 class="hero-title">
+					SZYFR<br />
+					<span class="c">DZIA</span><span class="v">ŁA</span
+					><span class="c">Ń</span>
+				</h1>
+
+				<div class="hero-log">
+					<p class="p">Klucz fragmentaryczny odczytany.</p>
+					<p class="p">Aktywuję następny moduł szyfrujący...</p>
+					<p class="p">Wymaga obliczenia szyfru kolejności działań</p>
+				</div>
+			</section>
+
+			<div class="divider"></div>
+
+			<!-- ── FABUŁA ── -->
+			<section class="section">
+				<div class="section-label">// log.systemowy — 04:12:07</div>
+				<h2 class="section-title">Uszkodzony <span>algorytm</span></h2>
+
+				<div class="narrative-alert">
+					<div class="nal">
+						// KOMUNIKAT SYSTEMOWY :: PRIORYTET KRYTYCZNY
+					</div>
+					Udało ci się odzyskać pierwszy fragment klucza. Jednak
+					system MATRIX-7 zareagował na próbę odczytu i uruchomił
+					dodatkową warstwę szyfrowania.<br /><br />
+					Administrator przewidział taki scenariusz. W serwerowni
+					ukrył moduł odtworzeniowy — opisany jako
+					<strong style="color: #fff"
+						>„Procedura B: szyfr kolejności działań"</strong
+					>. Aby odszyfrować drugi fragment, musisz obliczyć wartości
+					czterech wyrażeń liczbowych — pamiętając o kolejności
+					wykonywania działań — i wpisać wszystkie cztery wyniki.
+				</div>
+
+				<p class="prose">
+					Kolejność wykonywania działań to serce protokołu
+					deszyfrującego. Każdy zaszyfrowany blok danych uczelni można
+					odczytać tylko wtedy, gdy obliczysz wyrażenie w odpowiedniej
+					kolejności: najpierw to, co w nawiasach, potem potęgi,
+					później mnożenie i dzielenie, a na końcu dodawanie i
+					odejmowanie.
+				</p>
+			</section>
+
+			<div class="divider"></div>
+
+			<!-- ── ZADANIE ── -->
+			<section class="section">
+				<div class="section-label">// terminal.zagadka — moduł 01</div>
+				<h2 class="section-title">Rozszyfruj <span>KOD</span></h2>
+
+				<!-- Teoria rozwijana -->
+				<button class="theory-toggle" onclick="toggleTheory()">
+					<span id="th-arr">▶</span> OTWÓRZ DOKUMENTACJĘ TECHNICZNĄ
+				</button>
+
+				<div class="theory-box" id="theory-box">
+					<div class="tv">// Kolejność wykonywania działań</div>
+					<br />
+					<div>
+						Aby poprawnie obliczyć wyrażenie, działania wykonujemy w
+						tej kolejności:
+					</div>
+					<br />
+					<div class="tg">Krok 1.</div>
+					<div>
+						Najpierw to, co jest w
+						<span class="tc">nawiasach ( )</span>
+					</div>
+					<br />
+					<div class="tg">Krok 2.</div>
+					<div>
+						Potem <span class="tc">potęgowanie</span>, np. 5² = 5·5
+						= 25, 2³ = 2·2·2 = 8
+					</div>
+					<br />
+					<div class="tg">Krok 3.</div>
+					<div>
+						<span class="tc">Mnożenie i dzielenie</span> — w
+						kolejności od lewej do prawej
+					</div>
+					<br />
+					<div class="tg">Krok 4.</div>
+					<div>
+						<span class="tc">Dodawanie i odejmowanie</span> — w
+						kolejności od lewej do prawej
+					</div>
+					<br />
+					<div class="tv">// Pamiętaj: nawiasy zawsze pierwsze!</div>
+				</div>
+
+				<!-- Terminal -->
+				<div class="puzzle-wrap">
+					<div class="t-header">
+						<div class="tdot r"></div>
+						<div class="tdot y"></div>
+						<div class="tdot g"></div>
+						<span class="t-title"
+							>MATRIX-7 :: modul_dzialania.exe :: AKTYWNY</span
+						>
+					</div>
+
+					<div class="t-prompt">
+						<p class="p">
+							Zidentyfikowano cztery zaszyfrowane wyrażenia
+							liczbowe.
+						</p>
+						<p class="p">
+							Oblicz wartość każdego z nich, stosując poprawną
+							kolejność działań.
+						</p>
+						<p class="p" style="color: var(--gold)">
+							Wprowadź wszystkie cztery wyniki.
+						</p>
+					</div>
+
+					<!-- Wyrażenia do obliczenia -->
+					<div class="expr-grid">
+						<div class="expr-card">
+							<div class="expr-label">// wyrażenie K₁</div>
+							<div class="expr-text">5² &minus; 3 × 4</div>
+						</div>
+						<div class="expr-card">
+							<div class="expr-label">// wyrażenie K₂</div>
+							<div class="expr-text">(8 + 4) × 2 &minus; 9</div>
+						</div>
+						<div class="expr-card">
+							<div class="expr-label">// wyrażenie K₃</div>
+							<div class="expr-text">36 ÷ 6 + 2³</div>
+						</div>
+						<div class="expr-card">
+							<div class="expr-label">// wyrażenie K₄</div>
+							<div class="expr-text">
+								7 × (10 &minus; 6) &minus; 2²
+							</div>
+						</div>
+					</div>
+
+					<!-- Inputy -->
+					<div class="input-matrix-area">
+						<span class="inp-brk">[</span>
+						<div class="inp-cells">
+							<div class="inp-wrap">
+								<input
+									type="number"
+									id="k1"
+									placeholder=""
+									step="any"
+									autocomplete="off"
+									onkeydown="onEnter(event)"
+								/>
+								<span class="inp-sub">K₁</span>
+							</div>
+							<div class="inp-wrap">
+								<input
+									type="number"
+									id="k2"
+									placeholder=""
+									step="any"
+									autocomplete="off"
+									onkeydown="onEnter(event)"
+								/>
+								<span class="inp-sub">K₂</span>
+							</div>
+							<div class="inp-wrap">
+								<input
+									type="number"
+									id="k3"
+									placeholder=""
+									step="any"
+									autocomplete="off"
+									onkeydown="onEnter(event)"
+								/>
+								<span class="inp-sub">K₃</span>
+							</div>
+							<div class="inp-wrap">
+								<input
+									type="number"
+									id="k4"
+									placeholder=""
+									step="any"
+									autocomplete="off"
+									onkeydown="onEnter(event)"
+								/>
+								<span class="inp-sub">K₄</span>
+							</div>
+						</div>
+						<span class="inp-brk">]</span>
+					</div>
+
+					<!-- Wskazówka -->
+					<button class="hint-btn" onclick="toggleHint()">
+						<span id="h-arr">▶</span> POKAŻ WSKAZÓWKĘ
+					</button>
+
+					<div class="hint-reveal" id="hint-reveal">
+						<div class="hc">
+							// Krok 1: zacznij od działań w nawiasach (jeśli
+							występują)
+						</div>
+						<div style="margin-top: 0.5rem">
+							// Krok 2: oblicz potęgi — np. 5² = 25, 2³ = 8
+						</div>
+						<div style="margin-top: 0.5rem">
+							// Krok 3: wykonaj mnożenie i dzielenie, od lewej do
+							prawej
+						</div>
+						<div style="margin-top: 0.5rem">
+							// Krok 4: na końcu dodaj i odejmij, od lewej do
+							prawej
+						</div>
+					</div>
+
+					<!-- Weryfikacja -->
+					<button
+						class="verify-btn"
+						id="verify-btn"
+						onclick="checkAnswer()"
+					>
+						AUTORYZUJ DESZYFRATOR →
+					</button>
+
+					<div class="feedback" id="feedback"></div>
+
+					<!-- UNLOCK -->
+					<div class="unlock-panel" id="unlock-panel">
+						<div class="unlock-icon">🔓</div>
+						<div class="unlock-label">
+							// fragment klucza :: moduł 01 ::
+						</div>
+						<div class="unlock-code">SIGMA&ndash;7</div>
+
+						<div class="unlock-frags">
+							<div class="uf done">DELTA–2</div>
+							<div class="uf just">SIGMA–7 ✓</div>
+							<div class="uf">??? 🔒</div>
+							<div class="uf">??? 🔒</div>
+							<div
+								class="uf"
+								style="
+									border-color: rgba(255, 209, 102, 0.15);
+									color: rgba(255, 209, 102, 0.35);
+								"
+							>
+								KLUCZ
+							</div>
+						</div>
+
+						<div class="unlock-next">
+							<span class="arrow">▶</span> Dwa fragmenty klucza
+							odczytane.<br />
+							<span class="arrow">▶</span> Żeby znaleźć kolejny
+							kod QR przy
+							<span class="loc"
+								>poszukaj czerwonej skrzyneczki</span
+							>.<br />
+							<span class="arrow">▶</span> Następny moduł:
+							<span class="loc"
+								>szyfr ułamków i działań pisemnych</span
+							>.
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<div class="divider"></div>
+
+			<!-- ── FRAGMENTY KLUCZA ── -->
+			<section
+				class="section"
+				style="
+					text-align: center;
+					padding-bottom: clamp(3rem, 6vw, 5rem);
+				"
+			>
+				<div class="section-label">// klucz.główny — rekonstrukcja</div>
+				<h2 class="section-title">Zebrane <span>fragmenty</span></h2>
+				<p
+					class="prose"
+					style="
+						text-align: center;
+						margin: 0 auto 0.5rem;
+						max-width: 560px;
+					"
+				>
+					Każdy poprawnie rozwiązany moduł odsłania kolejny fragment
+					klucza głównego. Zbierz wszystkie pięć, by odblokować
+					MATRIX-7.
+				</p>
+
+				<div class="frags-row">
+					<div class="frag-chip collected">DELTA–2</div>
+					<div class="frag-chip plus">+</div>
+					<div class="frag-chip" id="frag2-chip">??? 🔒</div>
+					<div class="frag-chip plus">+</div>
+					<div class="frag-chip">??? 🔒</div>
+					<div class="frag-chip plus">+</div>
+					<div class="frag-chip">??? 🔒</div>
+					<div class="frag-chip plus">+</div>
+					<div class="frag-chip">??? 🔒</div>
+				</div>
+			</section>
+
+			<footer>
+				<p>
+					MATRIX-7 RECOVERY PROTOCOL //
+					<span>MODUŁ 01 — SZYFR DZIAŁAŃ</span> // SESJA AKTYWNA
+				</p>
+			</footer>
+		</div>
+		<!-- /layer -->
+
+		<!-- ── CANVAS SCRIPT ── -->
+		<script>
+			(function () {
+				const cv = document.getElementById("matrix-canvas");
+				const cx = cv.getContext("2d");
+				const ch = "0123456789²³+−×÷()=";
+				const sz = 13;
+				let cols, drops;
+
+				function resize() {
+					cv.width = window.innerWidth;
+					cv.height = window.innerHeight;
+					cols = Math.floor(cv.width / sz);
+					drops = drops ? drops.slice(0, cols) : [];
+					while (drops.length < cols) drops.push(Math.random() * -60);
+				}
+				resize();
+				window.addEventListener("resize", resize);
+
+				function draw() {
+					cx.fillStyle = "rgba(7,11,20,0.07)";
+					cx.fillRect(0, 0, cv.width, cv.height);
+					cx.font = sz + "px Share Tech Mono, monospace";
+					for (let i = 0; i < cols; i++) {
+						const c = ch[Math.floor(Math.random() * ch.length)];
+						const g = Math.random();
+						if (g > 0.9) cx.fillStyle = "#7B2FFF";
+						else if (g > 0.76) cx.fillStyle = "#00D4FF";
+						else cx.fillStyle = "#1A2A40";
+						cx.fillText(c, i * sz, drops[i] * sz);
+						if (drops[i] * sz > cv.height && Math.random() > 0.978)
+							drops[i] = 0;
+						drops[i] += 0.35;
+					}
+				}
+				setInterval(draw, 50);
+			})();
+
+			/* ── TOGGLES ── */
+			function toggleTheory() {
+				const b = document.getElementById("theory-box");
+				const a = document.getElementById("th-arr");
+				b.classList.toggle("visible");
+				a.textContent = b.classList.contains("visible") ? "▼" : "▶";
+			}
+
+			let hintShown = false;
+			function toggleHint() {
+				hintShown = !hintShown;
+				document
+					.getElementById("hint-reveal")
+					.classList.toggle("show", hintShown);
+				document.getElementById("h-arr").textContent = hintShown
+					? "▼"
+					: "▶";
+			}
+
+			/* ── ENTER KEY ── */
+			function onEnter(e) {
+				if (e.key === "Enter") checkAnswer();
+			}
+
+			/* ── ANSWER CHECK ──
+   K1 = 5² − 3×4            = 25 − 12       = 13
+   K2 = (8+4)×2 − 9         = 12×2 − 9      = 15
+   K3 = 36÷6 + 2³           = 6 + 8         = 14
+   K4 = 7×(10−6) − 2²       = 7×4 − 4       = 24
+*/
+			let attempts = 0;
+			const CORRECT = { k1: 13, k2: 15, k3: 14, k4: 24 };
+
+			function checkAnswer() {
+				const ids = ["k1", "k2", "k3", "k4"];
+				const vals = {};
+				let allFilled = true;
+
+				ids.forEach((id) => {
+					const raw = document.getElementById(id).value.trim();
+					if (raw === "") allFilled = false;
+					vals[id] = parseFloat(raw);
+				});
+
+				const fb = document.getElementById("feedback");
+				fb.className = "feedback";
+
+				if (!allFilled) {
+					fb.textContent =
+						"// BŁĄD: Wypełnij wszystkie cztery pola wynikami.";
+					fb.classList.add("err");
+					return;
+				}
+
+				attempts++;
+				const ok = ids.every((id) => vals[id] === CORRECT[id]);
+
+				if (ok) {
+					// Mark inputs green
+					ids.forEach((id) => {
+						const el = document.getElementById(id);
+						el.classList.remove("wrong");
+						el.classList.add("correct");
+						el.disabled = true;
+					});
+					fb.textContent = `// WERYFIKACJA POZYTYWNA :: WSZYSTKIE WYNIKI POPRAWNE :: FRAGMENT KLUCZA ODSZYFROWANY // próba ${attempts}`;
+					fb.classList.add("ok");
+
+					document.getElementById("verify-btn").disabled = true;
+
+					// Update progress bar
+					document.getElementById("prog-fill").style.width = "20%";
+					document.getElementById("prog-label").textContent = "20%";
+
+					// Reveal fragment chip only now
+					const chip = document.getElementById("frag2-chip");
+					chip.textContent = "SIGMA–7 ✓";
+					chip.classList.add("collected");
+
+					// Show unlock panel
+					const ul = document.getElementById("unlock-panel");
+					ul.classList.add("show");
+					setTimeout(
+						() =>
+							ul.scrollIntoView({
+								behavior: "smooth",
+								block: "center",
+							}),
+						120,
+					);
+				} else {
+					// Mark wrong fields red, correct ones green
+					ids.forEach((id) => {
+						const el = document.getElementById(id);
+						el.classList.remove("correct", "wrong");
+						const v = vals[id];
+						if (!isNaN(v) && v === CORRECT[id])
+							el.classList.add("correct");
+						else el.classList.add("wrong");
+					});
+
+					const msgs = [
+						`// ODMOWA DOSTĘPU :: Co najmniej jeden wynik jest błędny. Sprawdź kolejność działań.`,
+						`// ALERT :: Próba ${attempts}. Pamiętaj: nawiasy → potęgi → mnożenie/dzielenie → dodawanie/odejmowanie.`,
+						`// BŁĄD KRYTYCZNY :: ${attempts} nieudane próby. Czerwone pola wymagają poprawki.`,
+					];
+					fb.textContent =
+						msgs[Math.min(attempts - 1, msgs.length - 1)];
+					fb.classList.add("err");
+				}
+			}
+		</script>
+	</body>
+</html>

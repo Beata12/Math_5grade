@@ -1,0 +1,1341 @@
+<!doctype html>
+<html lang="pl">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>ZAGADKA 3 — ZBIORNIK ENERGII — Escape Room klasa 5</title>
+		<link
+			href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Inter:wght@300;400;600;700&display=swap"
+			rel="stylesheet"
+		/>
+		<style>
+			*,
+			*::before,
+			*::after {
+				box-sizing: border-box;
+				margin: 0;
+				padding: 0;
+			}
+
+			:root {
+				--bg: #070b14;
+				--bg2: #0d1628;
+				--cyan: #00d4ff;
+				--violet: #7b2fff;
+				--red: #ff3366;
+				--gold: #ffd166;
+				--text: #c8d8ee;
+				--text-dim: #5a7090;
+				--mono: "Share Tech Mono", monospace;
+				--sans: "Inter", sans-serif;
+			}
+
+			html {
+				scroll-behavior: smooth;
+			}
+
+			body {
+				background: var(--bg);
+				color: var(--text);
+				font-family: var(--sans);
+				overflow-x: hidden;
+				min-height: 100vh;
+			}
+
+			#matrix-canvas {
+				position: fixed;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+				z-index: 0;
+				opacity: 0.18;
+				pointer-events: none;
+			}
+
+			.layer {
+				position: relative;
+				z-index: 1;
+			}
+
+			.hero {
+				min-height: 70vh;
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				justify-content: center;
+				text-align: center;
+				padding: 4rem 1.5rem 2rem;
+				gap: 1.5rem;
+			}
+
+			.badge {
+				font-family: var(--mono);
+				font-size: 0.7rem;
+				letter-spacing: 0.3em;
+				color: var(--cyan);
+				border: 1px solid var(--cyan);
+				padding: 0.35em 1em;
+				border-radius: 2px;
+				text-transform: uppercase;
+				animation: pulse-border 2.5s ease-in-out infinite;
+			}
+
+			@keyframes pulse-border {
+				0%,
+				100% {
+					box-shadow: 0 0 6px var(--cyan);
+				}
+				50% {
+					box-shadow:
+						0 0 20px var(--cyan),
+						0 0 40px rgba(0, 212, 255, 0.2);
+				}
+			}
+
+			.hero-title {
+				font-family: var(--mono);
+				font-size: clamp(1.8rem, 6vw, 4rem);
+				line-height: 1.1;
+				letter-spacing: -0.01em;
+				color: #fff;
+			}
+
+			.hero-title .accent {
+				color: var(--cyan);
+				text-shadow: 0 0 30px var(--cyan);
+			}
+			.hero-title .accent-v {
+				color: var(--violet);
+				text-shadow: 0 0 30px var(--violet);
+			}
+
+			.hero-sub {
+				font-family: var(--mono);
+				font-size: clamp(0.7rem, 2vw, 0.95rem);
+				color: var(--text-dim);
+				letter-spacing: 0.15em;
+				max-width: 520px;
+			}
+
+			section {
+				padding: clamp(2rem, 6vw, 4rem) clamp(1.5rem, 5vw, 4rem);
+				max-width: 900px;
+				margin: 0 auto;
+			}
+
+			.section-label {
+				font-family: var(--mono);
+				font-size: 0.65rem;
+				letter-spacing: 0.4em;
+				color: var(--cyan);
+				text-transform: uppercase;
+				margin-bottom: 1.2rem;
+			}
+
+			.section-title {
+				font-family: var(--mono);
+				font-size: clamp(1.4rem, 4vw, 2.2rem);
+				color: #fff;
+				margin-bottom: 1.5rem;
+				line-height: 1.2;
+			}
+
+			.section-title span {
+				color: var(--violet);
+			}
+
+			.prose {
+				font-size: clamp(0.9rem, 2vw, 1.05rem);
+				line-height: 1.8;
+				color: var(--text);
+				font-weight: 300;
+				max-width: 680px;
+			}
+
+			.divider {
+				height: 1px;
+				background: linear-gradient(
+					90deg,
+					transparent,
+					var(--cyan),
+					transparent
+				);
+				opacity: 0.25;
+				max-width: 900px;
+				margin: 0 auto;
+			}
+
+			.puzzle-wrapper {
+				background: rgba(10, 14, 26, 0.95);
+				border: 1px solid rgba(123, 47, 255, 0.4);
+				border-radius: 8px;
+				padding: clamp(1.5rem, 4vw, 2.5rem);
+				margin-top: 2rem;
+				box-shadow:
+					0 0 60px rgba(123, 47, 255, 0.1),
+					inset 0 0 40px rgba(0, 0, 0, 0.4);
+				position: relative;
+				overflow: hidden;
+			}
+
+			.puzzle-wrapper::before {
+				content: "";
+				position: absolute;
+				top: 0;
+				left: 0;
+				right: 0;
+				height: 3px;
+				background: linear-gradient(
+					90deg,
+					var(--violet),
+					var(--cyan),
+					var(--violet)
+				);
+				animation: scan 3s linear infinite;
+			}
+
+			@keyframes scan {
+				0% {
+					background-position: -200% center;
+				}
+				100% {
+					background-position: 200% center;
+				}
+			}
+
+			.terminal-header {
+				display: flex;
+				align-items: center;
+				gap: 0.6rem;
+				margin-bottom: 1.5rem;
+				padding-bottom: 1rem;
+				border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+			}
+
+			.t-dot {
+				width: 10px;
+				height: 10px;
+				border-radius: 50%;
+			}
+			.t-dot.r {
+				background: var(--red);
+			}
+			.t-dot.y {
+				background: var(--gold);
+			}
+			.t-dot.g {
+				background: #4ade80;
+			}
+
+			.terminal-title {
+				font-family: var(--mono);
+				font-size: 0.7rem;
+				color: var(--text-dim);
+				margin-left: 0.5rem;
+				letter-spacing: 0.1em;
+			}
+
+			.puzzle-intro {
+				font-family: var(--mono);
+				font-size: 0.8rem;
+				color: #4ade80;
+				margin-bottom: 1.2rem;
+				line-height: 1.6;
+			}
+			.puzzle-intro .prompt::before {
+				content: "> ";
+				color: var(--cyan);
+			}
+
+			.tank-icon-row {
+				display: flex;
+				justify-content: center;
+				margin-bottom: 1.2rem;
+			}
+
+			.math-block {
+				background: rgba(0, 0, 0, 0.4);
+				border-left: 3px solid var(--cyan);
+				padding: 1.2rem 1.5rem;
+				border-radius: 0 4px 4px 0;
+				margin: 1.2rem 0;
+				font-family: var(--mono);
+				color: #fff;
+				line-height: 2;
+				font-size: clamp(0.85rem, 2.5vw, 1rem);
+			}
+
+			.math-block .row {
+				display: flex;
+				align-items: baseline;
+				gap: 0.6em;
+				flex-wrap: wrap;
+			}
+			.math-block .tag {
+				color: var(--cyan);
+				min-width: 7.5em;
+				display: inline-block;
+			}
+			.math-block .val {
+				color: var(--gold);
+				font-weight: 700;
+			}
+			.math-block .q {
+				margin-top: 0.8em;
+				padding-top: 0.8em;
+				border-top: 1px dashed rgba(255, 255, 255, 0.12);
+				color: #fff;
+			}
+
+			.hint-toggle {
+				display: inline-flex;
+				align-items: center;
+				gap: 0.5rem;
+				background: none;
+				border: 1px solid rgba(0, 212, 255, 0.3);
+				color: var(--text-dim);
+				font-family: var(--mono);
+				font-size: 0.75rem;
+				letter-spacing: 0.1em;
+				padding: 0.5em 1.2em;
+				border-radius: 3px;
+				cursor: pointer;
+				transition: all 0.2s;
+				margin-bottom: 1.2rem;
+			}
+
+			.hint-toggle:hover {
+				border-color: var(--cyan);
+				color: var(--cyan);
+			}
+
+			.hint-box {
+				background: rgba(0, 212, 255, 0.05);
+				border: 1px solid rgba(0, 212, 255, 0.2);
+				border-radius: 4px;
+				padding: 1rem 1.2rem;
+				font-family: var(--mono);
+				font-size: 0.78rem;
+				color: var(--text-dim);
+				line-height: 1.8;
+				margin-bottom: 1.2rem;
+				display: none;
+			}
+
+			.hint-box.visible {
+				display: block;
+			}
+
+			.answer-row {
+				display: flex;
+				gap: 0.8rem;
+				align-items: stretch;
+				flex-wrap: wrap;
+			}
+
+			.answer-label {
+				font-family: var(--mono);
+				font-size: 0.8rem;
+				color: var(--text-dim);
+				display: flex;
+				align-items: center;
+				white-space: nowrap;
+			}
+
+			.answer-input {
+				flex: 1;
+				min-width: 120px;
+				background: rgba(0, 0, 0, 0.5);
+				border: 1px solid rgba(255, 255, 255, 0.12);
+				border-radius: 4px;
+				padding: 0.65em 1em;
+				font-family: var(--mono);
+				font-size: 0.95rem;
+				color: #fff;
+				outline: none;
+				transition: border-color 0.2s;
+				text-align: center;
+				letter-spacing: 0.1em;
+			}
+
+			.answer-input:focus {
+				border-color: var(--cyan);
+				box-shadow: 0 0 0 2px rgba(0, 212, 255, 0.15);
+			}
+
+			.answer-hint-small {
+				font-family: var(--mono);
+				font-size: 0.68rem;
+				color: var(--text-dim);
+				margin-top: 0.5rem;
+			}
+
+			.answer-btn {
+				background: linear-gradient(135deg, var(--violet), #5b1fbf);
+				border: none;
+				border-radius: 4px;
+				padding: 0.65em 1.8em;
+				font-family: var(--mono);
+				font-size: 0.82rem;
+				letter-spacing: 0.12em;
+				color: #fff;
+				cursor: pointer;
+				transition:
+					transform 0.15s,
+					box-shadow 0.2s;
+				white-space: nowrap;
+			}
+
+			.answer-btn:hover {
+				transform: translateY(-1px);
+				box-shadow: 0 4px 20px rgba(123, 47, 255, 0.4);
+			}
+
+			.feedback {
+				margin-top: 1rem;
+				font-family: var(--mono);
+				font-size: 0.82rem;
+				padding: 0.75em 1.1em;
+				border-radius: 4px;
+				display: none;
+				animation: fade-in 0.3s ease;
+			}
+
+			@keyframes fade-in {
+				from {
+					opacity: 0;
+					transform: translateY(4px);
+				}
+				to {
+					opacity: 1;
+					transform: translateY(0);
+				}
+			}
+
+			.feedback.ok {
+				display: block;
+				background: rgba(74, 222, 128, 0.1);
+				border: 1px solid rgba(74, 222, 128, 0.35);
+				color: #4ade80;
+			}
+			.feedback.err {
+				display: block;
+				background: rgba(255, 51, 102, 0.1);
+				border: 1px solid rgba(255, 51, 102, 0.35);
+				color: var(--red);
+			}
+
+			.password-reveal {
+				margin-top: 1.5rem;
+				padding: 1.5rem;
+				background: rgba(0, 212, 255, 0.06);
+				border: 1px solid rgba(0, 212, 255, 0.3);
+				border-radius: 6px;
+				text-align: center;
+				display: none;
+				animation: fade-in 0.5s ease;
+			}
+
+			.password-reveal.show {
+				display: block;
+			}
+
+			.pw-label {
+				font-family: var(--mono);
+				font-size: 0.65rem;
+				letter-spacing: 0.4em;
+				color: var(--text-dim);
+				text-transform: uppercase;
+				margin-bottom: 0.75rem;
+			}
+			.pw-code {
+				font-family: var(--mono);
+				font-size: clamp(1.5rem, 5vw, 2.5rem);
+				color: var(--cyan);
+				letter-spacing: 0.3em;
+				text-shadow: 0 0 30px var(--cyan);
+				font-weight: 700;
+			}
+			.pw-next {
+				margin-top: 1rem;
+				font-family: var(--mono);
+				font-size: 0.78rem;
+				color: var(--text-dim);
+				line-height: 1.7;
+				text-align: left;
+				max-width: 480px;
+				margin-left: auto;
+				margin-right: auto;
+			}
+			.pw-next .arrow {
+				color: var(--gold);
+			}
+
+			/* === Zebrane fragmenty (progress tracker) === */
+			.fragments-section {
+				text-align: center;
+			}
+
+			.fragments-desc {
+				margin: 0 auto;
+				text-align: center;
+			}
+
+			.fragments-row {
+				display: flex;
+				justify-content: center;
+				align-items: center;
+				gap: 0.6rem;
+				flex-wrap: wrap;
+				margin-top: 2.2rem;
+			}
+
+			.fragment-plus {
+				font-family: var(--mono);
+				color: var(--text-dim);
+				font-size: 1rem;
+			}
+
+			.fragment-pill {
+				font-family: var(--mono);
+				font-size: 0.8rem;
+				letter-spacing: 0.06em;
+				padding: 0.65em 1.3em;
+				border-radius: 6px;
+				border: 1px solid rgba(255, 255, 255, 0.1);
+				background: rgba(13, 22, 40, 0.7);
+				color: var(--text-dim);
+				transition: all 0.5s ease;
+			}
+
+			.fragment-pill.locked {
+				opacity: 0.6;
+			}
+
+			.fragment-pill.collected {
+				color: var(--cyan);
+				border-color: var(--cyan);
+				background: rgba(0, 212, 255, 0.06);
+				box-shadow: 0 0 16px rgba(0, 212, 255, 0.25);
+			}
+
+			.fragment-pill.just-unlocked {
+				animation: unlock-pop 0.6s ease;
+			}
+
+			@keyframes unlock-pop {
+				0% {
+					transform: scale(0.85);
+					box-shadow: 0 0 0 rgba(0, 212, 255, 0);
+				}
+				55% {
+					transform: scale(1.12);
+					box-shadow: 0 0 28px rgba(0, 212, 255, 0.55);
+				}
+				100% {
+					transform: scale(1);
+					box-shadow: 0 0 16px rgba(0, 212, 255, 0.25);
+				}
+			}
+
+			footer {
+				text-align: center;
+				padding: 2.5rem 1.5rem;
+				font-family: var(--mono);
+				font-size: 0.65rem;
+				color: var(--text-dim);
+				letter-spacing: 0.15em;
+				border-top: 1px solid rgba(255, 255, 255, 0.04);
+			}
+			footer span {
+				color: var(--cyan);
+			}
+
+			@media (max-width: 480px) {
+				.answer-row {
+					flex-direction: column;
+				}
+				.answer-input {
+					min-width: unset;
+				}
+				.answer-btn {
+					width: 100%;
+				}
+				.math-block .tag {
+					min-width: unset;
+				}
+			}
+		</style>
+	</head>
+	<body>
+		<canvas id="matrix-canvas"></canvas>
+
+		<div class="layer">
+			<section class="hero">
+				<div class="badge">Escape Room — Moduł 3 / 5 — Klasa 5</div>
+
+				<h1 class="hero-title">
+					ZBIORNIK<br />
+					<span class="accent">ENERGII</span>
+					<span class="accent-v">ROBO-5</span>
+				</h1>
+
+				<p class="hero-sub">
+					ZNALEZIONO KOD QR #2 :: WYKRYTO LUK&#280; W ZASILANIU ::
+					WYMAGANE OBLICZENIA NA U&#321;AMKACH
+				</p>
+			</section>
+
+			<section>
+				<div class="section-label">
+					// log.zdarzenia &mdash; modu&#322; 3
+				</div>
+				<p class="prose">
+					&#346;wietna robota! Zeskanowali&#347;cie drugi kod QR i
+					ROBO-5 odblokowa&#322; kolejny modu&#322; naprawczy. Tym
+					razem trzeba sprawdzi&#263;, ile energii brakuje w zbiorniku
+					&mdash; a do tego potrzebne s&#261; u&#322;amki zwyk&#322;e
+					i dziesi&#281;tne. Rozwi&#261;&#380;cie zagadk&#281;, by
+					ods&#322;oni&#263; trzeci fragment kodu
+					g&#322;&oacute;wnego.
+				</p>
+			</section>
+
+			<div class="divider"></div>
+
+			<section id="zagadka">
+				<div class="section-label">
+					// terminal.zagadka &mdash; poziom 2 / u&#322;amki
+				</div>
+				<h2 class="section-title">Zagadka <span>energetyczna</span></h2>
+				<p class="prose" style="margin-bottom: 0.5rem">
+					ROBO-5 pokazuje raport z czujnik&oacute;w zbiornika.
+					Obliczcie, jaka cz&#281;&#347;&#263; zbiornika
+					pozosta&#322;a pusta.
+				</p>
+
+				<div class="puzzle-wrapper">
+					<div class="terminal-header">
+						<div class="t-dot r"></div>
+						<div class="t-dot y"></div>
+						<div class="t-dot g"></div>
+						<span class="terminal-title"
+							>ROBO-5 :: modu&#322; 3 :: zagadka_2.exe ::
+							u&#322;amki i liczby dziesi&#281;tne</span
+						>
+					</div>
+
+					<div class="tank-icon-row">
+						<svg
+							width="120"
+							height="64"
+							viewBox="0 0 120 64"
+							fill="none"
+							xmlns="http://www.w3.org/2000/svg"
+						>
+							<rect
+								x="3"
+								y="10"
+								width="100"
+								height="44"
+								rx="8"
+								stroke="#00D4FF"
+								stroke-width="2.5"
+								fill="rgba(0,212,255,0.05)"
+							/>
+							<rect
+								x="103"
+								y="24"
+								width="10"
+								height="16"
+								rx="3"
+								fill="#00D4FF"
+							/>
+							<line
+								x1="3"
+								y1="32"
+								x2="103"
+								y2="32"
+								stroke="rgba(0,212,255,0.25)"
+								stroke-width="1.5"
+								stroke-dasharray="3 3"
+							/>
+							<text
+								x="53"
+								y="37"
+								text-anchor="middle"
+								font-family="Share Tech Mono, monospace"
+								font-size="11"
+								fill="#FFD166"
+							>
+								?
+							</text>
+						</svg>
+					</div>
+
+					<div class="puzzle-intro">
+						<p class="prompt">
+							Zbiornik energii ROBO-5 to
+							<strong>1 ca&#322;o&#347;&#263;</strong>.
+						</p>
+						<p class="prompt">
+							W ci&#261;gu dnia czujniki zarejestrowa&#322;y trzy
+							uzupe&#322;nienia energii.
+						</p>
+						<p class="prompt">
+							Obliczcie, jaka cz&#281;&#347;&#263; zbiornika
+							zosta&#322;a <strong>PUSTA</strong>.
+						</p>
+					</div>
+
+					<div class="math-block">
+						<div class="row">
+							<span class="tag">RANO:</span>
+							<span class="val">3/10</span>
+							<span>zbiornika</span>
+						</div>
+						<div class="row">
+							<span class="tag">W PO&#321;UDNIE:</span>
+							<span class="val">0,25</span>
+							<span>zbiornika</span>
+						</div>
+						<div class="row">
+							<span class="tag">WIECZOREM:</span>
+							<span class="val">2/5</span>
+							<span>zbiornika</span>
+						</div>
+						<div class="row q">
+							<span class="tag" style="color: #fff"
+								>PYTANIE:</span
+							>
+							<span
+								>Jaka cz&#281;&#347;&#263; zbiornika
+								zosta&#322;a pusta?</span
+							>
+						</div>
+					</div>
+
+					<div
+						style="
+							font-size: 0.72em;
+							color: var(--text-dim);
+							font-family: var(--mono);
+							margin-bottom: 1rem;
+						"
+					>
+						// Wpisz odpowied&#378; jako liczb&#281;
+						dziesi&#281;tn&#261; (np. 0.5 &mdash; u&#380;yj kropki,
+						nie przecinka)
+					</div>
+
+					<button class="hint-toggle" onclick="toggleHint()">
+						<span id="hint-arrow">&#9654;</span> POKA&#379;
+						WSKAZ&Oacute;WK&#280; KROK PO KROKU
+					</button>
+
+					<!-- WSKAZÓWKA — tylko metodologia, bez gotowego wyniku -->
+					<div class="hint-box" id="hint-box">
+						<div style="color: var(--cyan); margin-bottom: 0.6em">
+							// KROK 1 &mdash; Zamie&#324; u&#322;amki
+							zwyk&#322;e na dziesi&#281;tne:
+						</div>
+						<div
+							style="
+								color: var(--text-dim);
+								line-height: 1.75;
+								margin-bottom: 0.9em;
+							"
+						>
+							3/10 zamie&#324; na liczb&#281; dziesi&#281;tn&#261;
+							(dziesi&#261;te cz&#281;&#347;ci licz si&#281;
+							&#322;atwo). To samo zr&oacute;b z 2/5 &mdash;
+							najpierw rozszerz u&#322;amek tak, by w mianowniku
+							by&#322;o 10.
+						</div>
+
+						<div style="color: var(--cyan); margin-bottom: 0.5em">
+							// KROK 2 &mdash; Dodaj trzy liczby dziesi&#281;tne:
+						</div>
+						<div
+							style="
+								color: var(--text-dim);
+								line-height: 1.75;
+								margin-bottom: 0.9em;
+							"
+						>
+							Zapisz wszystkie trzy warto&#347;ci jedna pod
+							drug&#261;, dok&#322;adnie ustawiaj&#261;c przecinki
+							w jednej kolumnie. Dodaj tak jak liczby
+							ca&#322;kowite, pami&#281;taj&#261;c o przecinku w
+							wyniku.
+						</div>
+
+						<div style="color: var(--cyan); margin-bottom: 0.5em">
+							// KROK 3 &mdash; Por&oacute;wnaj z ca&#322;ym
+							zbiornikiem:
+						</div>
+						<div
+							style="
+								color: var(--text-dim);
+								line-height: 1.75;
+								margin-bottom: 0.9em;
+							"
+						>
+							Ca&#322;y zbiornik to 1, czyli 1,00. Odejmij od
+							niego sum&#281; z kroku 2.
+						</div>
+
+						<div style="color: var(--cyan); margin-bottom: 0.5em">
+							// KROK 4 &mdash; Sprawd&#378; wynik:
+						</div>
+						<div style="color: var(--text-dim); line-height: 1.75">
+							Wynik powinien by&#263; ma&#322;&#261; liczb&#261;
+							dziesi&#281;tn&#261; z dwoma miejscami po przecinku
+							(setne cz&#281;&#347;ci).
+						</div>
+					</div>
+
+					<div class="answer-row">
+						<span class="answer-label">Pusta część =</span>
+						<input
+							class="answer-input"
+							id="answer"
+							type="text"
+							inputmode="decimal"
+							placeholder="np. 0.5"
+							autocomplete="off"
+							onkeydown="
+								if (event.key === 'Enter') checkAnswer();
+							"
+						/>
+						<button class="answer-btn" onclick="checkAnswer()">
+							WERYFIKUJ &rarr;
+						</button>
+					</div>
+					<div class="answer-hint-small">
+						// u&#380;yj kropki jako separatora dziesi&#281;tnego,
+						np. 0.05
+					</div>
+
+					<div class="feedback" id="feedback"></div>
+
+					<div class="password-reveal" id="pw-reveal">
+						<div class="pw-label">
+							// fragment kodu :: poziom 2 ::
+						</div>
+						<div class="pw-code">THETA&ndash;6</div>
+						<div class="pw-next">
+							<span class="arrow">&#9654;</span>
+							Zapami&#281;tajcie ten fragment.<br />
+							<!-- Nauczycielu: podmień poniższy opis na prawdziwą lokalizację trzeciego kodu QR w Twojej szkole -->
+							<span class="arrow">&#9654;</span> Trzeci kod QR
+							czeka tam, gdzie szko&#322;a przechowuje wiedz&#281;
+							na p&oacute;&322;kach &mdash; zapytajcie
+							nauczyciela, w kt&oacute;rym pomieszczeniu si&#281;
+							ukrywa!<br />
+							<span class="arrow">&#9654;</span> Zeskanujcie go,
+							by przej&#347;&#263; do zagadki numer 4.
+						</div>
+					</div>
+				</div>
+
+				<div
+					id="wiedza-explainer"
+					style="
+						display: none;
+						margin-top: 2.5rem;
+						animation: fade-in 0.6s ease;
+					"
+				>
+					<div class="section-label" style="margin-top: 0">
+						// baza.wiedzy &mdash; odblokowano po rozwi&#261;zaniu
+					</div>
+					<h3
+						style="
+							font-family: var(--mono);
+							font-size: clamp(1.1rem, 3vw, 1.6rem);
+							color: #fff;
+							margin-bottom: 1.2rem;
+							line-height: 1.3;
+						"
+					>
+						Jak &#322;&#261;czy&#263; u&#322;amki<br />zwyk&#322;e i
+						dziesi&#281;tne?
+					</h3>
+
+					<div
+						style="
+							background: rgba(13, 22, 40, 0.8);
+							border: 1px solid rgba(0, 212, 255, 0.15);
+							border-left: 3px solid var(--cyan);
+							border-radius: 0 6px 6px 0;
+							padding: 1.3rem 1.5rem;
+							margin-bottom: 1.2rem;
+						"
+					>
+						<div
+							style="
+								font-family: var(--mono);
+								font-size: 0.62rem;
+								letter-spacing: 0.25em;
+								color: var(--cyan);
+								margin-bottom: 0.6rem;
+							"
+						>
+							// ZASADA
+						</div>
+						<p
+							style="
+								font-size: 0.9rem;
+								line-height: 1.8;
+								color: var(--text);
+							"
+						>
+							Ka&#380;dy u&#322;amek zwyk&#322;y mo&#380;na
+							zamieni&#263; na u&#322;amek dziesi&#281;tny.
+							Najpro&#347;ciej jest to zrobi&#263;, gdy mianownik
+							mo&#380;na rozszerzy&#263; do
+							<strong style="color: var(--gold)">10</strong>,
+							<strong style="color: var(--gold)">100</strong> lub
+							<strong style="color: var(--gold)">1000</strong>.
+							Wtedy liczba dziesi&#281;tnych miejsc po przecinku
+							odpowiada liczbie zer w mianowniku.
+						</p>
+					</div>
+
+					<div
+						style="
+							font-family: var(--mono);
+							font-size: 0.62rem;
+							letter-spacing: 0.25em;
+							color: var(--gold);
+							margin-bottom: 0.9rem;
+							text-transform: uppercase;
+						"
+					>
+						// Algorytm &mdash; krok po kroku
+					</div>
+					<div
+						style="
+							display: grid;
+							grid-template-columns: repeat(
+								auto-fit,
+								minmax(200px, 1fr)
+							);
+							gap: 1rem;
+							margin-bottom: 1.5rem;
+						"
+					>
+						<div
+							style="
+								background: rgba(13, 22, 40, 0.7);
+								border: 1px solid rgba(255, 255, 255, 0.07);
+								border-radius: 6px;
+								padding: 1.1rem;
+							"
+						>
+							<div
+								style="
+									font-family: var(--mono);
+									font-size: 0.6rem;
+									color: var(--text-dim);
+									margin-bottom: 0.4rem;
+								"
+							>
+								KROK 01
+							</div>
+							<div
+								style="
+									font-family: var(--mono);
+									font-size: 0.8rem;
+									color: var(--cyan);
+									margin-bottom: 0.4rem;
+								"
+							>
+								Rozszerz u&#322;amki
+							</div>
+							<div
+								style="
+									font-size: 0.82rem;
+									color: var(--text-dim);
+									line-height: 1.65;
+								"
+							>
+								3/10 jest ju&#380; dziesi&#261;tymi
+								cz&#281;&#347;ciami. 2/5 rozszerz &times;2,
+								&#380;eby mianownik by&#322; r&oacute;wny 10.
+							</div>
+						</div>
+						<div
+							style="
+								background: rgba(13, 22, 40, 0.7);
+								border: 1px solid rgba(255, 255, 255, 0.07);
+								border-radius: 6px;
+								padding: 1.1rem;
+							"
+						>
+							<div
+								style="
+									font-family: var(--mono);
+									font-size: 0.6rem;
+									color: var(--text-dim);
+									margin-bottom: 0.4rem;
+								"
+							>
+								KROK 02
+							</div>
+							<div
+								style="
+									font-family: var(--mono);
+									font-size: 0.8rem;
+									color: var(--cyan);
+									margin-bottom: 0.4rem;
+								"
+							>
+								Zapisz dziesi&#281;tnie
+							</div>
+							<div
+								style="
+									font-size: 0.82rem;
+									color: var(--text-dim);
+									line-height: 1.65;
+								"
+							>
+								Ka&#380;dy u&#322;amek o mianowniku 10 zapisz
+								jako liczb&#281; z jednym miejscem po przecinku.
+							</div>
+						</div>
+						<div
+							style="
+								background: rgba(13, 22, 40, 0.7);
+								border: 1px solid rgba(255, 255, 255, 0.07);
+								border-radius: 6px;
+								padding: 1.1rem;
+							"
+						>
+							<div
+								style="
+									font-family: var(--mono);
+									font-size: 0.6rem;
+									color: var(--text-dim);
+									margin-bottom: 0.4rem;
+								"
+							>
+								KROK 03
+							</div>
+							<div
+								style="
+									font-family: var(--mono);
+									font-size: 0.8rem;
+									color: var(--cyan);
+									margin-bottom: 0.4rem;
+								"
+							>
+								Dodaj w s&#322;upku
+							</div>
+							<div
+								style="
+									font-size: 0.82rem;
+									color: var(--text-dim);
+									line-height: 1.65;
+								"
+							>
+								Ustaw przecinki dok&#322;adnie pod sob&#261; i
+								dodaj jak liczby ca&#322;kowite.
+							</div>
+						</div>
+						<div
+							style="
+								background: rgba(13, 22, 40, 0.7);
+								border: 1px solid rgba(255, 255, 255, 0.07);
+								border-radius: 6px;
+								padding: 1.1rem;
+							"
+						>
+							<div
+								style="
+									font-family: var(--mono);
+									font-size: 0.6rem;
+									color: var(--text-dim);
+									margin-bottom: 0.4rem;
+								"
+							>
+								KROK 04
+							</div>
+							<div
+								style="
+									font-family: var(--mono);
+									font-size: 0.8rem;
+									color: var(--cyan);
+									margin-bottom: 0.4rem;
+								"
+							>
+								Odejmij od 1
+							</div>
+							<div
+								style="
+									font-size: 0.82rem;
+									color: var(--text-dim);
+									line-height: 1.65;
+								"
+							>
+								1,00 minus suma z kroku 3 = pusta
+								cz&#281;&#347;&#263; zbiornika.
+							</div>
+						</div>
+					</div>
+
+					<div
+						style="
+							background: rgba(74, 222, 128, 0.04);
+							border: 1px solid rgba(74, 222, 128, 0.2);
+							border-radius: 6px;
+							padding: 1.4rem 1.5rem;
+						"
+					>
+						<div
+							style="
+								font-family: var(--mono);
+								font-size: 0.62rem;
+								letter-spacing: 0.22em;
+								color: #4ade80;
+								margin-bottom: 0.9rem;
+							"
+						>
+							// PRZYK&#321;AD &mdash; nasza zagadka krok po kroku
+						</div>
+						<div
+							style="
+								font-size: 0.85rem;
+								line-height: 1.85;
+								color: var(--text);
+							"
+						>
+							<strong
+								style="color: #fff; font-family: var(--mono)"
+								>Zamiana na u&#322;amki dziesi&#281;tne:</strong
+							><br />
+							<span
+								style="
+									font-family: var(--mono);
+									color: var(--text-dim);
+								"
+							>
+								3/10 = 0,3 &nbsp;&nbsp;|&nbsp;&nbsp; 0,25
+								zostaje bez zmian &nbsp;&nbsp;|&nbsp;&nbsp; 2/5
+								= 4/10 = 0,4
+							</span>
+							<br /><br />
+							<strong
+								style="color: #fff; font-family: var(--mono)"
+								>Dodawanie w s&#322;upku:</strong
+							><br />
+							<span
+								style="
+									font-family: var(--mono);
+									color: var(--text-dim);
+								"
+							>
+								0,30<br />
+								0,25<br />
+								+ 0,40<br />
+								&mdash;&mdash;&mdash;&mdash;<br />
+								<span style="color: var(--gold)">0,95</span>
+							</span>
+							<br /><br />
+							<strong
+								style="color: #fff; font-family: var(--mono)"
+								>Pusta cz&#281;&#347;&#263; zbiornika:</strong
+							><br />
+							<span
+								style="
+									font-family: var(--mono);
+									color: var(--cyan);
+									font-size: 1.05rem;
+								"
+							>
+								1,00 &minus; 0,95 =
+								<span style="color: #4ade80; font-size: 1.15rem"
+									>0,05</span
+								>
+							</span>
+							<br /><br />
+							<span
+								style="
+									color: var(--text-dim);
+									font-size: 0.82rem;
+								"
+							>
+								Czyli zbiornik jest pusty w
+								<strong style="color: #fff">5 setnych</strong>
+								&mdash; to bardzo niewiele. ROBO-5 zaraz
+								wystartuje! &#9889;
+							</span>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<div class="divider"></div>
+
+			<section class="fragments-section">
+				<div class="section-label">
+					// klucz.g&#322;&oacute;wny &mdash; rekonstrukcja
+				</div>
+				<h2 class="section-title">Zebrane <span>fragmenty</span></h2>
+				<p class="prose fragments-desc">
+					Ka&#380;dy poprawnie rozwi&#261;zany modu&#322;
+					ods&#322;ania kolejny fragment klucza g&#322;&oacute;wnego.
+					Zbierz wszystkie pi&#281;&#263;, by obudzi&#263; ROBO-5.
+				</p>
+
+				<div class="fragments-row">
+					<div class="fragment-pill collected">DELTA-2 &#10003;</div>
+					<span class="fragment-plus">+</span>
+					<div class="fragment-pill collected">SIGMA-7 &#10003;</div>
+					<span class="fragment-plus">+</span>
+					<div class="fragment-pill locked" id="frag-3">
+						??? &#128274;
+					</div>
+					<span class="fragment-plus">+</span>
+					<div class="fragment-pill locked" id="frag-4">
+						??? &#128274;
+					</div>
+					<span class="fragment-plus">+</span>
+					<div class="fragment-pill locked" id="frag-5">
+						??? &#128274;
+					</div>
+				</div>
+			</section>
+
+			<footer>
+				<p>
+					ROBO-5 PROTOK&Oacute;&#321; NAPRAWY //
+					<span>KLASA 5</span> // MODU&#321; 3 AKTYWNY
+				</p>
+				<p style="margin-top: 0.5rem; color: #2a3a50">
+					// v1.0.0 &mdash; wszystkie kody zarezerwowane dla
+					najlepszych detektyw&oacute;w
+				</p>
+			</footer>
+		</div>
+
+		<script>
+			(function () {
+				const canvas = document.getElementById("matrix-canvas");
+				const ctx = canvas.getContext("2d");
+				const chars = "0123456789+−×÷=%½¼ROBO5";
+				const size = 14;
+				let cols, drops;
+
+				function resize() {
+					canvas.width = window.innerWidth;
+					canvas.height = window.innerHeight;
+					cols = Math.floor(canvas.width / size);
+					drops = drops ? drops.slice(0, cols) : [];
+					while (drops.length < cols) drops.push(Math.random() * -50);
+				}
+
+				resize();
+				window.addEventListener("resize", resize);
+
+				function draw() {
+					ctx.fillStyle = "rgba(7,11,20,0.08)";
+					ctx.fillRect(0, 0, canvas.width, canvas.height);
+					ctx.font = size + "px Share Tech Mono, monospace";
+					for (let i = 0; i < cols; i++) {
+						const ch =
+							chars[Math.floor(Math.random() * chars.length)];
+						const x = i * size;
+						const y = drops[i] * size;
+						const g = Math.random();
+						if (g > 0.85) ctx.fillStyle = "#00D4FF";
+						else if (g > 0.65) ctx.fillStyle = "#7B2FFF";
+						else ctx.fillStyle = "#1A3A5C";
+						ctx.fillText(ch, x, y);
+						if (y > canvas.height && Math.random() > 0.975)
+							drops[i] = 0;
+						drops[i] += 0.4;
+					}
+				}
+
+				setInterval(draw, 45);
+			})();
+
+			function toggleHint() {
+				const box = document.getElementById("hint-box");
+				const arrow = document.getElementById("hint-arrow");
+				box.classList.toggle("visible");
+				arrow.textContent = box.classList.contains("visible")
+					? "\u25BC"
+					: "\u25BA";
+			}
+
+			let attempts = 0;
+			const CORRECT = 0.05;
+
+			function checkAnswer() {
+				const raw = document.getElementById("answer").value.trim();
+				const normalized = raw.replace(",", ".");
+				const val = parseFloat(normalized);
+				const fb = document.getElementById("feedback");
+				const reveal = document.getElementById("pw-reveal");
+				const explainer = document.getElementById("wiedza-explainer");
+				attempts++;
+
+				fb.className = "feedback";
+				fb.style.display = "none";
+
+				if (isNaN(val)) {
+					fb.textContent =
+						"// B\u0141\u0104D: Wprowad\u017a warto\u015b\u0107 liczbow\u0105 (np. 0.5).";
+					fb.classList.add("err");
+					return;
+				}
+
+				if (Math.abs(val - CORRECT) < 0.001) {
+					fb.textContent =
+						"// WERYFIKACJA POZYTYWNA :: pusta cz\u0119\u015b\u0107 = 0.05 :: FRAGMENT KODU ODBLOKOWANY // pr\u00f3ba " +
+						attempts;
+					fb.classList.add("ok");
+					reveal.classList.add("show");
+					explainer.style.display = "block";
+
+					const frag3 = document.getElementById("frag-3");
+					frag3.classList.remove("locked");
+					frag3.classList.add("collected", "just-unlocked");
+					frag3.innerHTML = "THETA-6 &#10003;";
+
+					setTimeout(() => {
+						reveal.scrollIntoView({
+							behavior: "smooth",
+							block: "center",
+						});
+					}, 150);
+					setTimeout(() => {
+						explainer.scrollIntoView({
+							behavior: "smooth",
+							block: "start",
+						});
+					}, 1800);
+				} else {
+					const msgs = [
+						"// SPRAWD\u017a JESZCZE RAZ :: zamie\u0144 ka\u017cdy u\u0142amek na dziesi\u0119tny, zanim dodasz.",
+						"// PR\u00d3BA " +
+							attempts +
+							" :: Podpowied\u017a: 3/10 = 0,3 oraz 2/5 = 4/10. Dodaj wszystkie trzy warto\u015bci.",
+						"// ALERT :: " +
+							attempts +
+							" nieudane pr\u00f3by :: Skorzystaj z przycisku \u201ePoka\u017c wskaz\u00f3wk\u0119\u201d \u2014 rozpisano krok po kroku.",
+					];
+					fb.textContent =
+						msgs[Math.min(attempts - 1, msgs.length - 1)];
+					fb.classList.add("err");
+					document.getElementById("answer").value = "";
+					document.getElementById("answer").focus();
+				}
+			}
+		</script>
+	</body>
+</html>

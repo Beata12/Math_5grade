@@ -1,0 +1,1177 @@
+<!doctype html>
+<html lang="pl">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>ZAGADKA 6 — KONSOLA MOCY — Escape Room klasa 5</title>
+		<link
+			href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Inter:wght@300;400;600;700&display=swap"
+			rel="stylesheet"
+		/>
+		<style>
+			*,
+			*::before,
+			*::after {
+				box-sizing: border-box;
+				margin: 0;
+				padding: 0;
+			}
+
+			:root {
+				--bg: #070b14;
+				--bg2: #0d1628;
+				--cyan: #00d4ff;
+				--violet: #7b2fff;
+				--red: #ff3366;
+				--gold: #ffd166;
+				--green: #4ade80;
+				--text: #c8d8ee;
+				--text-dim: #5a7090;
+				--mono: "Share Tech Mono", monospace;
+				--sans: "Inter", sans-serif;
+			}
+
+			html {
+				scroll-behavior: smooth;
+			}
+
+			body {
+				background: var(--bg);
+				color: var(--text);
+				font-family: var(--sans);
+				overflow-x: hidden;
+				min-height: 100vh;
+			}
+
+			#matrix-canvas {
+				position: fixed;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+				z-index: 0;
+				opacity: 0.18;
+				pointer-events: none;
+			}
+
+			.layer {
+				position: relative;
+				z-index: 1;
+			}
+
+			.hero {
+				min-height: 70vh;
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				justify-content: center;
+				text-align: center;
+				padding: 4rem 1.5rem 2rem;
+				gap: 1.5rem;
+			}
+
+			.badge {
+				font-family: var(--mono);
+				font-size: 0.7rem;
+				letter-spacing: 0.3em;
+				color: var(--cyan);
+				border: 1px solid var(--cyan);
+				padding: 0.35em 1em;
+				border-radius: 2px;
+				text-transform: uppercase;
+				animation: pulse-border 2.5s ease-in-out infinite;
+			}
+
+			@keyframes pulse-border {
+				0%,
+				100% {
+					box-shadow: 0 0 6px var(--cyan);
+				}
+				50% {
+					box-shadow:
+						0 0 20px var(--cyan),
+						0 0 40px rgba(0, 212, 255, 0.2);
+				}
+			}
+
+			.hero-title {
+				font-family: var(--mono);
+				font-size: clamp(1.8rem, 6vw, 4rem);
+				line-height: 1.1;
+				letter-spacing: -0.01em;
+				color: #fff;
+			}
+
+			.hero-title .accent {
+				color: var(--cyan);
+				text-shadow: 0 0 30px var(--cyan);
+			}
+			.hero-title .accent-v {
+				color: var(--violet);
+				text-shadow: 0 0 30px var(--violet);
+			}
+
+			.hero-sub {
+				font-family: var(--mono);
+				font-size: clamp(0.7rem, 2vw, 0.95rem);
+				color: var(--text-dim);
+				letter-spacing: 0.15em;
+				max-width: 520px;
+			}
+
+			section {
+				padding: clamp(2rem, 6vw, 4rem) clamp(1.5rem, 5vw, 4rem);
+				max-width: 900px;
+				margin: 0 auto;
+			}
+
+			.section-label {
+				font-family: var(--mono);
+				font-size: 0.65rem;
+				letter-spacing: 0.4em;
+				color: var(--cyan);
+				text-transform: uppercase;
+				margin-bottom: 1.2rem;
+			}
+
+			.section-title {
+				font-family: var(--mono);
+				font-size: clamp(1.4rem, 4vw, 2.2rem);
+				color: #fff;
+				margin-bottom: 1.5rem;
+				line-height: 1.2;
+			}
+
+			.section-title span {
+				color: var(--violet);
+			}
+
+			.prose {
+				font-size: clamp(0.9rem, 2vw, 1.05rem);
+				line-height: 1.8;
+				color: var(--text);
+				font-weight: 300;
+				max-width: 680px;
+			}
+
+			.divider {
+				height: 1px;
+				background: linear-gradient(
+					90deg,
+					transparent,
+					var(--cyan),
+					transparent
+				);
+				opacity: 0.25;
+				max-width: 900px;
+				margin: 0 auto;
+			}
+
+			.puzzle-wrapper {
+				background: rgba(10, 14, 26, 0.95);
+				border: 1px solid rgba(123, 47, 255, 0.4);
+				border-radius: 8px;
+				padding: clamp(1.5rem, 4vw, 2.5rem);
+				margin-top: 2rem;
+				box-shadow:
+					0 0 60px rgba(123, 47, 255, 0.1),
+					inset 0 0 40px rgba(0, 0, 0, 0.4);
+				position: relative;
+				overflow: hidden;
+			}
+
+			.puzzle-wrapper::before {
+				content: "";
+				position: absolute;
+				top: 0;
+				left: 0;
+				right: 0;
+				height: 3px;
+				background: linear-gradient(
+					90deg,
+					var(--violet),
+					var(--cyan),
+					var(--violet)
+				);
+				animation: scan 3s linear infinite;
+			}
+
+			@keyframes scan {
+				0% {
+					background-position: -200% center;
+				}
+				100% {
+					background-position: 200% center;
+				}
+			}
+
+			.terminal-header {
+				display: flex;
+				align-items: center;
+				gap: 0.6rem;
+				margin-bottom: 1.5rem;
+				padding-bottom: 1rem;
+				border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+			}
+
+			.t-dot {
+				width: 10px;
+				height: 10px;
+				border-radius: 50%;
+			}
+			.t-dot.r {
+				background: var(--red);
+			}
+			.t-dot.y {
+				background: var(--gold);
+			}
+			.t-dot.g {
+				background: #4ade80;
+			}
+
+			.terminal-title {
+				font-family: var(--mono);
+				font-size: 0.7rem;
+				color: var(--text-dim);
+				margin-left: 0.5rem;
+				letter-spacing: 0.1em;
+			}
+
+			.puzzle-intro {
+				font-family: var(--mono);
+				font-size: 0.8rem;
+				color: #4ade80;
+				margin-bottom: 1.2rem;
+				line-height: 1.6;
+			}
+			.puzzle-intro .prompt::before {
+				content: "> ";
+				color: var(--cyan);
+			}
+
+			/* === Target badge === */
+			.target-row {
+				display: flex;
+				justify-content: center;
+				margin-bottom: 1.4rem;
+			}
+			.target-badge {
+				text-align: center;
+				padding: 0.8rem 2.4rem;
+				border-radius: 8px;
+				border: 1px solid rgba(255, 209, 102, 0.4);
+				background: rgba(255, 209, 102, 0.06);
+			}
+			.target-badge-label {
+				font-family: var(--mono);
+				font-size: 0.6rem;
+				letter-spacing: 0.35em;
+				color: var(--gold);
+				text-transform: uppercase;
+				margin-bottom: 0.3rem;
+			}
+			.target-badge-value {
+				font-family: var(--mono);
+				font-size: 2rem;
+				color: #fff;
+				font-weight: 700;
+				text-shadow: 0 0 20px rgba(255, 209, 102, 0.5);
+			}
+
+			.hint-toggle {
+				display: inline-flex;
+				align-items: center;
+				gap: 0.5rem;
+				background: none;
+				border: 1px solid rgba(0, 212, 255, 0.3);
+				color: var(--text-dim);
+				font-family: var(--mono);
+				font-size: 0.75rem;
+				letter-spacing: 0.1em;
+				padding: 0.5em 1.2em;
+				border-radius: 3px;
+				cursor: pointer;
+				transition: all 0.2s;
+			}
+
+			.hint-toggle:hover {
+				border-color: var(--cyan);
+				color: var(--cyan);
+			}
+
+			.hint-box {
+				background: rgba(0, 212, 255, 0.05);
+				border: 1px solid rgba(0, 212, 255, 0.2);
+				border-radius: 4px;
+				padding: 1rem 1.2rem;
+				font-family: var(--mono);
+				font-size: 0.78rem;
+				color: var(--text-dim);
+				line-height: 1.8;
+				margin: 1.2rem 0;
+				display: none;
+			}
+
+			.hint-box.visible {
+				display: block;
+			}
+
+			.hint-box ul {
+				list-style: none;
+				margin-top: 0.5em;
+			}
+			.hint-box li {
+				margin-bottom: 0.4em;
+			}
+			.hint-box li::before {
+				content: "▸ ";
+				color: var(--cyan);
+			}
+
+			/* === Number game === */
+			.num-pool {
+				display: flex;
+				justify-content: center;
+				align-items: center;
+				gap: 1rem;
+				flex-wrap: wrap;
+				margin: 1.6rem 0;
+				min-height: 4.5rem;
+			}
+
+			.num-tile {
+				font-family: var(--mono);
+				font-size: clamp(1.3rem, 4vw, 1.7rem);
+				font-weight: 700;
+				color: #fff;
+				background: rgba(13, 22, 40, 0.85);
+				border: 2px solid rgba(0, 212, 255, 0.3);
+				border-radius: 10px;
+				width: clamp(3.4rem, 12vw, 4.2rem);
+				height: clamp(3.4rem, 12vw, 4.2rem);
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				cursor: pointer;
+				transition: all 0.2s ease;
+			}
+
+			.num-tile:hover {
+				border-color: var(--cyan);
+				transform: translateY(-2px);
+			}
+
+			.num-tile.selected {
+				border-color: var(--cyan);
+				background: rgba(0, 212, 255, 0.12);
+				box-shadow: 0 0 18px rgba(0, 212, 255, 0.4);
+				transform: translateY(-2px);
+			}
+
+			.op-row {
+				display: flex;
+				justify-content: center;
+				gap: 0.6rem;
+				margin-bottom: 1.2rem;
+				flex-wrap: wrap;
+			}
+
+			.op-btn {
+				font-family: var(--mono);
+				font-size: 1.1rem;
+				font-weight: 700;
+				color: var(--text-dim);
+				background: rgba(13, 22, 40, 0.7);
+				border: 1px solid rgba(255, 255, 255, 0.12);
+				border-radius: 6px;
+				width: 3rem;
+				height: 2.6rem;
+				cursor: pointer;
+				transition: all 0.2s ease;
+			}
+
+			.op-btn:disabled {
+				opacity: 0.35;
+				cursor: not-allowed;
+			}
+
+			.op-btn:not(:disabled):hover {
+				border-color: var(--violet);
+				color: #fff;
+			}
+
+			.op-btn.active {
+				border-color: var(--violet);
+				background: rgba(123, 47, 255, 0.18);
+				color: #fff;
+				box-shadow: 0 0 14px rgba(123, 47, 255, 0.35);
+			}
+
+			.combine-preview {
+				text-align: center;
+				font-family: var(--mono);
+				font-size: clamp(0.9rem, 2.5vw, 1.1rem);
+				color: var(--text-dim);
+				min-height: 1.6em;
+				margin-bottom: 1.2rem;
+			}
+
+			.controls-row {
+				display: flex;
+				justify-content: center;
+				align-items: center;
+				gap: 0.8rem;
+				flex-wrap: wrap;
+				margin-bottom: 1rem;
+			}
+
+			.answer-btn {
+				background: linear-gradient(135deg, var(--violet), #5b1fbf);
+				border: none;
+				border-radius: 4px;
+				padding: 0.65em 1.8em;
+				font-family: var(--mono);
+				font-size: 0.82rem;
+				letter-spacing: 0.12em;
+				color: #fff;
+				cursor: pointer;
+				transition:
+					transform 0.15s,
+					box-shadow 0.2s;
+				white-space: nowrap;
+			}
+
+			.answer-btn:disabled {
+				opacity: 0.35;
+				cursor: not-allowed;
+				transform: none;
+				box-shadow: none;
+			}
+
+			.answer-btn:not(:disabled):hover {
+				transform: translateY(-1px);
+				box-shadow: 0 4px 20px rgba(123, 47, 255, 0.4);
+			}
+
+			.feedback {
+				margin-top: 1rem;
+				font-family: var(--mono);
+				font-size: 0.82rem;
+				padding: 0.75em 1.1em;
+				border-radius: 4px;
+				display: none;
+				animation: fade-in 0.3s ease;
+			}
+
+			@keyframes fade-in {
+				from {
+					opacity: 0;
+					transform: translateY(4px);
+				}
+				to {
+					opacity: 1;
+					transform: translateY(0);
+				}
+			}
+
+			.feedback.ok {
+				display: block;
+				background: rgba(74, 222, 128, 0.1);
+				border: 1px solid rgba(74, 222, 128, 0.35);
+				color: #4ade80;
+			}
+			.feedback.err {
+				display: block;
+				background: rgba(255, 51, 102, 0.1);
+				border: 1px solid rgba(255, 51, 102, 0.35);
+				color: var(--red);
+			}
+
+			.password-reveal {
+				margin-top: 1.5rem;
+				padding: 1.5rem;
+				background: rgba(0, 212, 255, 0.06);
+				border: 1px solid rgba(0, 212, 255, 0.3);
+				border-radius: 6px;
+				text-align: center;
+				display: none;
+				animation: fade-in 0.5s ease;
+			}
+
+			.password-reveal.show {
+				display: block;
+			}
+
+			.pw-label {
+				font-family: var(--mono);
+				font-size: 0.65rem;
+				letter-spacing: 0.4em;
+				color: var(--text-dim);
+				text-transform: uppercase;
+				margin-bottom: 0.75rem;
+			}
+			.pw-code {
+				font-family: var(--mono);
+				font-size: clamp(1.5rem, 5vw, 2.5rem);
+				color: var(--cyan);
+				letter-spacing: 0.3em;
+				text-shadow: 0 0 30px var(--cyan);
+				font-weight: 700;
+			}
+			.pw-next {
+				margin-top: 1rem;
+				font-family: var(--mono);
+				font-size: 0.78rem;
+				color: var(--text-dim);
+				line-height: 1.7;
+				text-align: left;
+				max-width: 480px;
+				margin-left: auto;
+				margin-right: auto;
+			}
+			.pw-next .arrow {
+				color: var(--gold);
+			}
+
+			/* === Zebrane fragmenty (progress tracker) === */
+			.fragments-section {
+				text-align: center;
+			}
+
+			.fragments-desc {
+				margin: 0 auto;
+				text-align: center;
+			}
+
+			.fragments-row {
+				display: flex;
+				justify-content: center;
+				align-items: center;
+				gap: 0.6rem;
+				flex-wrap: wrap;
+				margin-top: 2.2rem;
+			}
+
+			.fragment-plus {
+				font-family: var(--mono);
+				color: var(--text-dim);
+				font-size: 1rem;
+			}
+
+			.fragment-pill {
+				font-family: var(--mono);
+				font-size: 0.8rem;
+				letter-spacing: 0.06em;
+				padding: 0.65em 1.3em;
+				border-radius: 6px;
+				border: 1px solid rgba(255, 255, 255, 0.1);
+				background: rgba(13, 22, 40, 0.7);
+				color: var(--text-dim);
+				transition: all 0.5s ease;
+			}
+
+			.fragment-pill.locked {
+				opacity: 0.6;
+			}
+
+			.fragment-pill.collected {
+				color: var(--cyan);
+				border-color: var(--cyan);
+				background: rgba(0, 212, 255, 0.06);
+				box-shadow: 0 0 16px rgba(0, 212, 255, 0.25);
+			}
+
+			.fragment-pill.just-unlocked {
+				animation: unlock-pop 0.6s ease;
+			}
+
+			@keyframes unlock-pop {
+				0% {
+					transform: scale(0.85);
+					box-shadow: 0 0 0 rgba(0, 212, 255, 0);
+				}
+				55% {
+					transform: scale(1.12);
+					box-shadow: 0 0 28px rgba(0, 212, 255, 0.55);
+				}
+				100% {
+					transform: scale(1);
+					box-shadow: 0 0 16px rgba(0, 212, 255, 0.25);
+				}
+			}
+
+			footer {
+				text-align: center;
+				padding: 2.5rem 1.5rem;
+				font-family: var(--mono);
+				font-size: 0.65rem;
+				color: var(--text-dim);
+				letter-spacing: 0.15em;
+				border-top: 1px solid rgba(255, 255, 255, 0.04);
+			}
+			footer span {
+				color: var(--cyan);
+			}
+
+			@media (max-width: 480px) {
+				.controls-row {
+					flex-direction: column;
+				}
+				.answer-btn,
+				.controls-row .hint-toggle {
+					width: 100%;
+				}
+			}
+		</style>
+	</head>
+	<body>
+		<canvas id="matrix-canvas"></canvas>
+
+		<div class="layer">
+			<section class="hero">
+				<div class="badge">Escape Room — Moduł 6 — Klasa 5</div>
+
+				<h1 class="hero-title">
+					KONSOLA<br />
+					<span class="accent">MOCY</span>
+					<span class="accent-v">ROBO-5</span>
+				</h1>
+
+				<p class="hero-sub">
+					ZNALEZIONO KOLEJNY KOD QR :: WYKRYTO PANEL AKTYWACYJNY ::
+					WYMAGANA KOMBINACJA LICZBOWA
+				</p>
+			</section>
+
+			<section>
+				<div class="section-label">// log.zdarzenia &mdash; modu&#322; 6</div>
+				<p class="prose">
+					&#346;wietnie, kolejny kod QR za wami! Tym razem ROBO-5
+					pokazuje panel z czterema modu&#322;ami mocy. Po&#322;&#261;czcie
+					je dzia&#322;aniami matematycznymi, by uzyska&#263;
+					dok&#322;adnie liczb&#281; aktywacyjn&#261;. To nie
+					rachunki na kartce &mdash; to ma&#322;a &#322;amig&#322;&oacute;wka,
+					w kt&oacute;rej trzeba pomy&#347;le&#263; i poeksperymentowa&#263;!
+				</p>
+			</section>
+
+			<div class="divider"></div>
+
+			<section id="zagadka">
+				<div class="section-label">
+					// terminal.zagadka &mdash; poziom 5 / gra liczbowa
+				</div>
+				<h2 class="section-title">
+					Gra <span>w 24</span>
+				</h2>
+				<p class="prose" style="margin-bottom: 0.5rem">
+					Macie cztery liczby. U&#380;ywaj&#261;c dzia&#322;a&#324;
+					<strong>+ &minus; &times; &divide;</strong>, po&#322;&#261;czcie
+					je wszystkie w jedn&#261; liczb&#281; r&oacute;wn&#261;
+					<strong>24</strong>.
+				</p>
+
+				<div class="puzzle-wrapper">
+					<div class="terminal-header">
+						<div class="t-dot r"></div>
+						<div class="t-dot y"></div>
+						<div class="t-dot g"></div>
+						<span class="terminal-title"
+							>ROBO-5 :: modu&#322; 6 :: zagadka_5.exe :: gra
+							liczbowa "24"</span
+						>
+					</div>
+
+					<div class="puzzle-intro">
+						<p class="prompt">
+							Kliknijcie dwie liczby z planszy, wybierzcie
+							dzia&#322;anie i po&#322;&#261;czcie je w jedn&#261;.
+						</p>
+						<p class="prompt">
+							Powtarzajcie, a&#380; zostanie jedna liczba.
+						</p>
+						<p class="prompt">
+							Je&#347;li to b&#281;dzie 24 &mdash; konsola si&#281;
+							aktywuje!
+						</p>
+					</div>
+
+					<div class="target-row">
+						<div class="target-badge">
+							<div class="target-badge-label">cel</div>
+							<div class="target-badge-value" id="target-display">24</div>
+						</div>
+					</div>
+
+					<button class="hint-toggle" onclick="toggleHint()">
+						<span id="hint-arrow">&#9654;</span> POKA&#379;
+						WSKAZ&Oacute;WKI
+					</button>
+
+					<div class="hint-box" id="hint-box">
+						<div style="color: var(--cyan); margin-bottom: 0.6em">
+							// JAK GRA&#262;:
+						</div>
+						<div style="color: var(--text-dim); line-height: 1.75; margin-bottom: 0.9em;">
+							Kliknijcie pierwsz&#261; liczb&#281;, potem
+							drug&#261;, a nast&#281;pnie wybierzcie dzia&#322;anie.
+							Zobaczycie podgl&#261;d wyniku. Je&#347;li wam
+							pasuje &mdash; kliknijcie &bdquo;PO&#321;&#260;CZ&rdquo;.
+							Dwie liczby znikn&#261;, a w ich miejsce pojawi
+							si&#281; wynik. Powtarzajcie, a&#380; zostanie
+							jedna liczba.
+						</div>
+						<div style="color: var(--cyan); margin-bottom: 0.5em">
+							// PODPOWIEDZI STRATEGICZNE:
+						</div>
+						<ul style="color: var(--text-dim); line-height: 1.75;">
+							<li>Spr&oacute;bujcie po&#322;&#261;czy&#263; wszystkie cztery liczby samym mno&#380;eniem &mdash; kolejno&#347;&#263; nie ma znaczenia.</li>
+							<li>Mno&#380;enie przez 1 nic nie zmienia &mdash; mo&#380;ecie zacz&#261;&#263; od dowolnych dw&oacute;ch pozosta&#322;ych liczb.</li>
+							<li>Dzielenie dzia&#322;a tylko wtedy, gdy wynik jest liczb&#261; ca&#322;kowit&#261; &mdash; konsola to sprawdzi za was.</li>
+							<li>Nie musicie trafi&#263; za pierwszym razem &mdash; u&#380;yjcie &bdquo;COFNIJ&rdquo; i spr&oacute;bujcie innej kombinacji!</li>
+						</ul>
+					</div>
+
+					<div class="num-pool" id="num-pool"></div>
+
+					<div class="op-row">
+						<button class="op-btn" data-op="+" onclick="opClick('+')">+</button>
+						<button class="op-btn" data-op="-" onclick="opClick('-')">&minus;</button>
+						<button class="op-btn" data-op="×" onclick="opClick('×')">&times;</button>
+						<button class="op-btn" data-op="÷" onclick="opClick('÷')">&divide;</button>
+					</div>
+
+					<div class="combine-preview" id="combine-preview"></div>
+
+					<div class="controls-row">
+						<button class="answer-btn" id="combine-btn" onclick="combineClick()" disabled>
+							PO&#321;&#260;CZ &rarr;
+						</button>
+						<button class="hint-toggle" onclick="undoClick()">COFNIJ</button>
+						<button class="hint-toggle" onclick="resetClick()">ZACZNIJ OD NOWA</button>
+					</div>
+
+					<div class="feedback" id="result-msg"></div>
+
+					<div class="password-reveal" id="pw-reveal">
+						<div class="pw-label">// fragment kodu :: poziom 5 ::</div>
+						<div class="pw-code">ZETA&ndash;9</div>
+						<div class="pw-next">
+							<span class="arrow">&#9654;</span> Brawo!
+							Konsola mocy aktywowana &mdash; zapami&#281;tajcie
+							ten fragment.<br />
+							<!-- Nauczycielu: podmień poniższy opis na prawdziwą lokalizację kolejnego kodu QR -->
+							<span class="arrow">&#9654;</span> Znajd&#378;cie
+							kolejny kod QR &mdash; zapytajcie nauczyciela, gdzie
+							si&#281; ukrywa!<br />
+							<span class="arrow">&#9654;</span> Zeskanujcie go,
+							by przej&#347;&#263; do nast&#281;pnej zagadki.
+						</div>
+					</div>
+				</div>
+
+				<div
+					id="wiedza-explainer"
+					style="
+						display: none;
+						margin-top: 2.5rem;
+						animation: fade-in 0.6s ease;
+					"
+				>
+					<div class="section-label" style="margin-top: 0">
+						// baza.wiedzy &mdash; odblokowano po rozwi&#261;zaniu
+					</div>
+					<h3
+						style="
+							font-family: var(--mono);
+							font-size: clamp(1.1rem, 3vw, 1.6rem);
+							color: #fff;
+							margin-bottom: 1.2rem;
+							line-height: 1.3;
+						"
+					>
+						Kolejno&#347;&#263; wykonywania dzia&#322;a&#324;
+					</h3>
+
+					<div
+						style="
+							background: rgba(13, 22, 40, 0.8);
+							border: 1px solid rgba(0, 212, 255, 0.15);
+							border-left: 3px solid var(--cyan);
+							border-radius: 0 6px 6px 0;
+							padding: 1.3rem 1.5rem;
+							margin-bottom: 1.2rem;
+						"
+					>
+						<p style="font-size: 0.9rem; line-height: 1.8; color: var(--text);">
+							W matematyce zawsze obowi&#261;zuje sta&#322;a
+							kolejno&#347;&#263;: najpierw dzia&#322;ania w
+							<strong style="color: var(--gold)">nawiasach</strong>,
+							potem
+							<strong style="color: var(--cyan)">mno&#380;enie i dzielenie</strong>
+							(od lewej do prawej), a na ko&#324;cu
+							<strong style="color: var(--cyan)">dodawanie i odejmowanie</strong>
+							(te&#380; od lewej do prawej). W tej grze sami
+							decydowali&#347;cie o kolejno&#347;ci &#322;&#261;czenia
+							liczb &mdash; to dok&#322;adnie tak, jakby&#347;cie
+							sami ustawiali nawiasy!
+						</p>
+					</div>
+
+					<div
+						style="
+							background: rgba(74, 222, 128, 0.04);
+							border: 1px solid rgba(74, 222, 128, 0.2);
+							border-radius: 6px;
+							padding: 1.4rem 1.5rem;
+						"
+					>
+						<div
+							style="
+								font-family: var(--mono);
+								font-size: 0.62rem;
+								letter-spacing: 0.22em;
+								color: #4ade80;
+								margin-bottom: 0.9rem;
+							"
+						>
+							// PRZYK&#321;ADOWE ROZWI&#260;ZANIE
+						</div>
+						<div style="font-size: 0.85rem; line-height: 1.85; color: var(--text);">
+							Liczby na planszy to <strong style="color: #fff">1, 2, 3, 4</strong>.
+							Najprostsza droga do 24:<br /><br />
+							<span style="font-family: var(--mono); color: var(--text-dim)">
+								Krok 1: &nbsp;1 &times; 2 = <span style="color: var(--gold)">2</span><br />
+								Krok 2: &nbsp;2 &times; 3 = <span style="color: var(--gold)">6</span><br />
+								Krok 3: &nbsp;6 &times; 4 = <span style="color: #4ade80; font-size: 1.1rem">24</span>
+							</span>
+							<br /><br />
+							<span style="color: var(--text-dim); font-size: 0.82rem">
+								To po prostu wszystkie cztery liczby pomno&#380;one
+								przez siebie! Je&#347;li znale&#378;li&#347;cie
+								inn&#261; kombinacj&#281; dzia&#322;a&#324;, kt&oacute;ra
+								te&#380; daje 24 &mdash; jest r&oacute;wnie dobra.
+								W matematyce cz&#281;sto istnieje wi&#281;cej ni&#380;
+								jedna poprawna droga do celu. &#9889;
+							</span>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<div class="divider"></div>
+
+			<section class="fragments-section">
+				<div class="section-label">// klucz.g&#322;&oacute;wny &mdash; rekonstrukcja</div>
+				<h2 class="section-title">
+					Zebrane <span>fragmenty</span>
+				</h2>
+				<p class="prose fragments-desc">
+					Ka&#380;dy poprawnie rozwi&#261;zany modu&#322; ods&#322;ania
+					kolejny fragment klucza g&#322;&oacute;wnego.
+				</p>
+
+				<div class="fragments-row">
+					<div class="fragment-pill collected">DELTA-2 &#10003;</div>
+					<span class="fragment-plus">+</span>
+					<div class="fragment-pill collected">SIGMA-7 &#10003;</div>
+					<span class="fragment-plus">+</span>
+					<div class="fragment-pill collected">THETA-6 &#10003;</div>
+					<span class="fragment-plus">+</span>
+					<div class="fragment-pill collected">LAMBDA-8 &#10003;</div>
+					<span class="fragment-plus">+</span>
+					<div class="fragment-pill collected">OMEGA-1 &#10003;</div>
+					<span class="fragment-plus">+</span>
+					<div class="fragment-pill locked" id="frag-6">??? &#128274;</div>
+				</div>
+			</section>
+
+			<footer>
+				<p>
+					ROBO-5 PROTOK&Oacute;&#321; NAPRAWY //
+					<span>KLASA 5</span> // MODU&#321; 6 AKTYWNY
+				</p>
+				<p style="margin-top: 0.5rem; color: #2a3a50">
+					// v1.0.0 &mdash; wszystkie kody zarezerwowane dla
+					najlepszych detektyw&oacute;w
+				</p>
+			</footer>
+		</div>
+
+		<script>
+			(function () {
+				const canvas = document.getElementById("matrix-canvas");
+				const ctx = canvas.getContext("2d");
+				const chars = "0123456789+−×÷=%½¼ROBO5";
+				const size = 14;
+				let cols, drops;
+
+				function resize() {
+					canvas.width = window.innerWidth;
+					canvas.height = window.innerHeight;
+					cols = Math.floor(canvas.width / size);
+					drops = drops ? drops.slice(0, cols) : [];
+					while (drops.length < cols) drops.push(Math.random() * -50);
+				}
+
+				resize();
+				window.addEventListener("resize", resize);
+
+				function draw() {
+					ctx.fillStyle = "rgba(7,11,20,0.08)";
+					ctx.fillRect(0, 0, canvas.width, canvas.height);
+					ctx.font = size + "px Share Tech Mono, monospace";
+					for (let i = 0; i < cols; i++) {
+						const ch =
+							chars[Math.floor(Math.random() * chars.length)];
+						const x = i * size;
+						const y = drops[i] * size;
+						const g = Math.random();
+						if (g > 0.85) ctx.fillStyle = "#00D4FF";
+						else if (g > 0.65) ctx.fillStyle = "#7B2FFF";
+						else ctx.fillStyle = "#1A3A5C";
+						ctx.fillText(ch, x, y);
+						if (y > canvas.height && Math.random() > 0.975)
+							drops[i] = 0;
+						drops[i] += 0.4;
+					}
+				}
+
+				setInterval(draw, 45);
+			})();
+
+			function toggleHint() {
+				const box = document.getElementById("hint-box");
+				const arrow = document.getElementById("hint-arrow");
+				box.classList.toggle("visible");
+				arrow.textContent = box.classList.contains("visible")
+					? "\u25BC"
+					: "\u25BA";
+			}
+
+			/* ===== "Game of 24" number puzzle ===== */
+			const TARGET = 24;
+			const ORIGINAL_NUMBERS = [1, 2, 3, 4];
+
+			let pool = [];
+			let nextId = 0;
+			let selectedIds = [];
+			let pendingOp = null;
+			let history = [];
+			let solved = false;
+
+			function shuffle(arr) {
+				const a = arr.slice();
+				for (let i = a.length - 1; i > 0; i--) {
+					const j = Math.floor(Math.random() * (i + 1));
+					[a[i], a[j]] = [a[j], a[i]];
+				}
+				return a;
+			}
+
+			function initPool() {
+				pool = shuffle(ORIGINAL_NUMBERS).map((v) => ({
+					id: nextId++,
+					value: v,
+				}));
+			}
+
+			function apply(op, a, b) {
+				if (op === "+") return a + b;
+				if (op === "×") return a * b;
+				if (op === "-") return Math.abs(a - b);
+				if (op === "÷") {
+					const hi = Math.max(a, b);
+					const lo = Math.min(a, b);
+					if (lo === 0) return null;
+					if (hi % lo !== 0) return null;
+					return hi / lo;
+				}
+				return null;
+			}
+
+			function renderPool() {
+				const container = document.getElementById("num-pool");
+				container.innerHTML = "";
+				pool.forEach((tile) => {
+					const el = document.createElement("div");
+					el.className =
+						"num-tile" +
+						(selectedIds.includes(tile.id) ? " selected" : "");
+					el.textContent = tile.value;
+					el.onclick = () => tileClick(tile.id);
+					container.appendChild(el);
+				});
+			}
+
+			function renderOps() {
+				document.querySelectorAll(".op-btn").forEach((btn) => {
+					btn.classList.toggle("active", btn.dataset.op === pendingOp);
+					btn.disabled = selectedIds.length !== 2 || solved;
+				});
+			}
+
+			function updatePreview() {
+				const previewEl = document.getElementById("combine-preview");
+				const combineBtn = document.getElementById("combine-btn");
+
+				if (selectedIds.length < 2) {
+					previewEl.textContent = "";
+					combineBtn.disabled = true;
+					return;
+				}
+
+				const a = pool.find((t) => t.id === selectedIds[0]).value;
+				const b = pool.find((t) => t.id === selectedIds[1]).value;
+
+				if (!pendingOp) {
+					previewEl.textContent = a + "  ?  " + b;
+					combineBtn.disabled = true;
+					return;
+				}
+
+				const result = apply(pendingOp, a, b);
+
+				if (result === null) {
+					previewEl.innerHTML =
+						'<span style="color: var(--red)">Nieprawidłowe działanie — spróbuj innej kombinacji</span>';
+					combineBtn.disabled = true;
+				} else {
+					let exprA = a;
+					let exprB = b;
+					if (pendingOp === "-" || pendingOp === "÷") {
+						exprA = Math.max(a, b);
+						exprB = Math.min(a, b);
+					}
+					previewEl.innerHTML =
+						exprA +
+						" " +
+						pendingOp +
+						" " +
+						exprB +
+						' = <span style="color: var(--green)">' +
+						result +
+						"</span>";
+					combineBtn.disabled = false;
+				}
+			}
+
+			function hideResultMsg() {
+				document.getElementById("result-msg").style.display = "none";
+			}
+
+			function tileClick(id) {
+				if (solved) return;
+				if (selectedIds.includes(id)) {
+					selectedIds = selectedIds.filter((x) => x !== id);
+				} else if (selectedIds.length < 2) {
+					selectedIds.push(id);
+				}
+				pendingOp = null;
+				hideResultMsg();
+				renderPool();
+				renderOps();
+				updatePreview();
+			}
+
+			function opClick(op) {
+				if (solved || selectedIds.length !== 2) return;
+				pendingOp = op;
+				renderOps();
+				updatePreview();
+			}
+
+			function combineClick() {
+				if (solved || selectedIds.length !== 2 || !pendingOp) return;
+				const a = pool.find((t) => t.id === selectedIds[0]).value;
+				const b = pool.find((t) => t.id === selectedIds[1]).value;
+				const result = apply(pendingOp, a, b);
+				if (result === null) return;
+
+				history.push(JSON.parse(JSON.stringify(pool)));
+
+				pool = pool.filter((t) => !selectedIds.includes(t.id));
+				pool.push({ id: nextId++, value: result });
+				selectedIds = [];
+				pendingOp = null;
+
+				renderPool();
+				renderOps();
+				updatePreview();
+				checkPoolStatus();
+			}
+
+			function checkPoolStatus() {
+				const msgEl = document.getElementById("result-msg");
+				if (pool.length === 1) {
+					if (pool[0].value === TARGET) {
+						onSolved();
+					} else {
+						msgEl.className = "feedback err";
+						msgEl.style.display = "block";
+						msgEl.textContent =
+							"// Pozostała liczba: " +
+							pool[0].value +
+							" — to nie 24. Cofnijcie ruch albo zacznijcie od nowa.";
+					}
+				} else {
+					hideResultMsg();
+				}
+			}
+
+			function undoClick() {
+				if (solved || history.length === 0) return;
+				pool = history.pop();
+				selectedIds = [];
+				pendingOp = null;
+				hideResultMsg();
+				renderPool();
+				renderOps();
+				updatePreview();
+			}
+
+			function resetClick() {
+				if (solved) return;
+				initPool();
+				history = [];
+				selectedIds = [];
+				pendingOp = null;
+				hideResultMsg();
+				renderPool();
+				renderOps();
+				updatePreview();
+			}
+
+			function onSolved() {
+				solved = true;
+				const msgEl = document.getElementById("result-msg");
+				msgEl.className = "feedback ok";
+				msgEl.style.display = "block";
+				msgEl.textContent =
+					"// KONSOLA AKTYWOWANA :: WYNIK = 24 :: FRAGMENT KODU ODBLOKOWANY";
+
+				const reveal = document.getElementById("pw-reveal");
+				reveal.classList.add("show");
+
+				const explainer = document.getElementById("wiedza-explainer");
+				explainer.style.display = "block";
+
+				const frag6 = document.getElementById("frag-6");
+				frag6.classList.remove("locked");
+				frag6.classList.add("collected", "just-unlocked");
+				frag6.innerHTML = "ZETA-9 &#10003;";
+
+				renderOps();
+
+				setTimeout(() => {
+					reveal.scrollIntoView({ behavior: "smooth", block: "center" });
+				}, 200);
+			}
+
+			initPool();
+			renderPool();
+			renderOps();
+			updatePreview();
+		</script>
+	</body>
+</html>
